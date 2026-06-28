@@ -60,7 +60,7 @@
 | Local dev server (Python `http.server` port 8765) | ✅ |
 | Netlify deploy — frabjous-axolotl-99ed9c.netlify.app | ✅ |
 | Deployed URL recorded in TASKS.md | ✅ |
-| GitHub repo + auto-deploy | 👷 |
+| GitHub repo + auto-deploy | ✅ |
 
 ---
 
