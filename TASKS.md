@@ -17,7 +17,7 @@ Operational checklist. Strategic plan lives in [PLAN.md](./PLAN.md).
 6. Deployed all of the above to Netlify.
 
 **How to resume:**
-- Project lives at `/Users/linnet/Documents/TSORO ` (note trailing space in folder name).
+- Project lives at `/Users/linnet/Documents/tsoro`.
 - No Node.js installed. Serve with `python3 -m http.server 8765`; play at `/play-svg.html`, tests at `/test.html`, barebones reference at `/play.html`.
 - Check `lsof -i :8765` before starting the server — a previous session's server may still be running.
 - Redeploy: `zip -j /tmp/tsoro-deploy.zip index.html play-svg.html play.html engine.js ai.js engine.test.js test.html game.html play-animated.html demo-anim.html` then curl POST to Netlify API (site ID `31191621-2b5a-4d02-b9d2-bd411c974fa6`, token stored separately).
@@ -110,4 +110,3 @@ Shipped in `play-svg.html`. Original `play.html` left untouched as a reference.
 
 - Starting seeds = 2 was a sources-disagreement call; revisit if early playtesting feels off (some sources suggest 3).
 - Currently no "draw by agreement" mechanism — sources mention this exists in real play.
-- Folder name has a trailing space (`TSORO `) — cosmetic, but worth fixing if/when we git-init.
