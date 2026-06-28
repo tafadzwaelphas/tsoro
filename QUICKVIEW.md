@@ -125,4 +125,3 @@
 
 - Starting seeds = 2 — revisit if early playtesting feels off (some sources say 3)
 - No "draw by agreement" mechanism yet
-- Folder name has trailing space (`TSORO `) — fix when/if `git init`
