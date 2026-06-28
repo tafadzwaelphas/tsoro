@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tsoro — Phase 1 Console</title>
+<style>
+  body {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    background: #1a1a1a; color: #ddd; padding: 24px; margin: 0;
+  }
+  h1 { color: #fff; margin-top: 0; }
+  .board { display: inline-block; background: #2a2a2a; padding: 12px; border-radius: 8px; }
+  .row { display: flex; gap: 6px; margin: 4px 0; }
+  .row-label { width: 90px; color: #888; font-size: 0.85em; align-self: center; }
+  button.pit {
+    width: 52px; height: 52px;
+    background: #333; color: #ddd;
+    border: 1px solid #444; border-radius: 50%;
+    font: inherit; font-size: 1.1em;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  button.pit:hover:not(:disabled) { background: #4a6; color: #fff; }
+  button.pit:disabled { cursor: default; opacity: 0.5; }
+  button.pit.legal { background: #2d4a3a; border-color: #5fd06a; }
+  button.pit.legal:hover { background: #4a6; }
+  .pit-id { font-size: 0.6em; color: #666; }
+  .turn { margin: 16px 0; font-size: 1.1em; }
+  .turn.p1 { color: #6cc4ff; }
+  .turn.p2 { color: #ff9d6c; }
+  #log {
+    max-width: 600px; height: 240px; overflow-y: auto;
+    background: #111; padding: 12px; border-radius: 6px;
+    font-size: 0.9em; margin-top: 16px; white-space: pre-wrap;
+  }
+  .capture { color: #ffcc66; }
+  .relay { color: #66ccff; }
+  .turn-end { color: #888; }
+  .winner { color: #5fd06a; font-size: 1.2em; font-weight: bold; }
+  button.reset {
+    background: #444; color: #fff; border: none; padding: 8px 16px;
+    border-radius: 4px; cursor: pointer; font: inherit;
+  }
+  button.reset:hover { background: #555; }
+</style>
+</head>
+<body>
+<h1>Tsoro — Phase 1 Console</h1>
+<p style="color: #888; max-width: 600px;">
+  Phase 1 deliverable: barebones playable interface for validating the engine.
+  No animation, no polish — just click your highlighted pits to make a move.
+</p>
+
+<div class="turn" id="turn"></div>
+<div class="board" id="board"></div>
+<p><button class="reset" id="reset">New game</button></p>
+
+<h3 style="color: #fff;">Move log</h3>
+<div id="log"></div>
+
+<script type="module">
+  import { initialState, legalMoves, applyMove, P1, P2, COLS } from './engine.js';
+
+  let state = initialState();
+  const boardEl = document.getElementById('board');
+  const turnEl = document.getElementById('turn');
+  const logEl = document.getElementById('log');
+
+  // Row layout (top→bottom on screen): P2 outer, P2 inner, P1 inner, P1 outer
+  const ROW_LABELS = ['P2 outer', 'P2 inner', 'P1 inner', 'P1 outer'];
+
+  function describeEvent(e) {
+    if (e.type === 'pickup') return { cls: '', text: `pickup: ${e.seeds} seeds from pit ${e.pit}` };
+    if (e.type === 'relay') return { cls: 'relay', text: `relay at pit ${e.pit} (${e.seeds} seeds)` };
+    if (e.type === 'capture') return { cls: 'capture', text: `CAPTURE: ${e.seeds} seeds from pits ${e.from.join(' & ')} (last sown at ${e.at})` };
+    if (e.type === 'turn-end') return { cls: 'turn-end', text: `turn ends — ${e.reason} at pit ${e.pit}` };
+    return { cls: '', text: JSON.stringify(e) };
+  }
+
+  function logMove(player, sourcePit, events) {
+    const lines = [`P${player + 1} plays pit ${sourcePit}`];
+    for (const e of events) {
+      const { cls, text } = describeEvent(e);
+      lines.push(`  <span class="${cls}">${text}</span>`);
+    }
+    logEl.innerHTML += lines.join('\n') + '\n';
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function render() {
+    boardEl.innerHTML = '';
+    const legal = new Set(legalMoves(state));
+
+    for (let row = 0; row < 4; row++) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'row';
+      const label = document.createElement('div');
+      label.className = 'row-label';
+      label.textContent = ROW_LABELS[row];
+      rowEl.appendChild(label);
+
+      for (let col = 0; col < COLS; col++) {
+        const pit = row * COLS + col;
+        const btn = document.createElement('button');
+        btn.className = 'pit';
+        if (legal.has(pit)) btn.classList.add('legal');
+        btn.disabled = !legal.has(pit) || state.phase !== 'play';
+        btn.innerHTML = `${state.board[pit]}<div class="pit-id">${pit}</div>`;
+        btn.addEventListener('click', () => onPitClick(pit));
+        rowEl.appendChild(btn);
+      }
+      boardEl.appendChild(rowEl);
+    }
+
+    if (state.phase === 'ended') {
+      turnEl.className = 'turn winner';
+      turnEl.textContent = `Game over — P${state.winner + 1} wins!`;
+    } else {
+      turnEl.className = `turn p${state.turn + 1}`;
+      turnEl.textContent = `P${state.turn + 1}'s turn`;
+    }
+  }
+
+  function onPitClick(pit) {
+    try {
+      const player = state.turn;
+      const { state: next, events } = applyMove(state, pit);
+      state = next;
+      logMove(player, pit, events);
+      render();
+    } catch (e) {
+      logEl.innerHTML += `  <span class="fail">error: ${e.message}</span>\n`;
+    }
+  }
+
+  document.getElementById('reset').addEventListener('click', () => {
+    state = initialState();
+    logEl.innerHTML = '';
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>

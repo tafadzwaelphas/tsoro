@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flying-seed animation — standalone demo</title>
+<style>
+  body {
+    background: #2a1f17;
+    color: #ead4a3;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    padding: 24px 16px;
+    text-align: center;
+  }
+  h1 { font-family: Georgia, serif; margin-bottom: 4px; }
+  p.note { color: #a89070; max-width: 560px; margin: 8px auto 18px; font-size: 0.9em; line-height: 1.5; }
+  svg {
+    background: linear-gradient(to bottom, #a87246, #6e4523);
+    border-radius: 16px;
+    max-width: 600px;
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+  }
+  .pit { fill: #3a2410; stroke: #2a1808; stroke-width: 1.5; }
+  .pit.source { stroke: #f0c75e; stroke-width: 3.5; }
+  .seed { fill: #ead4a3; stroke: #6b4a1c; stroke-width: 0.6; }
+  .seed.flying { filter: drop-shadow(0 3px 3px rgba(0,0,0,0.55)); }
+  .count {
+    fill: #ead4a3; font-weight: 700;
+    text-anchor: middle; dominant-baseline: central;
+    font-size: 16px; pointer-events: none;
+  }
+  button {
+    background: #b8865a; color: #2a1808;
+    border: none; padding: 10px 22px;
+    border-radius: 6px; cursor: pointer;
+    font: inherit; font-weight: 600;
+    margin: 16px 6px 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  button:hover { background: #f0c75e; }
+  p.status { color: #f0c75e; min-height: 1.4em; font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>Flying-seed animation — standalone demo</h1>
+<p class="note">
+  No engine, no modules, no scenarios. Just a hardcoded board and the same
+  <code>flySeed</code> + <code>animateMove</code> primitives used in
+  <code>play-svg.html</code>. Click <strong>Sow</strong> — a seed should hop
+  from the gold-ringed pit to its right neighbors with an arc and a soft shadow.
+</p>
+
+<svg id="board" viewBox="0 0 540 260" xmlns="http://www.w3.org/2000/svg" role="img">
+  <g id="pits"></g>
+  <g id="anim"></g>
+</svg>
+
+<p>
+  <button id="go-simple">▶ Sow 2 seeds (pit 21 → 22, 23)</button>
+  <button id="go-long">▶ Sow 5 seeds (pit 21 → 22, 23, 24, 25, 26)</button>
+  <button id="reset">↺ Reset</button>
+</p>
+<p class="status" id="status">Click a button.</p>
+
+<script>
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const PIT_R = 25;
+  const COL_X = [40, 110, 180, 250, 320, 390, 460];
+  const ROW_Y = [40, 100, 160, 220];
+
+  let board = new Array(28).fill(0);
+  let source = 21;
+
+  const pitsLayer = document.getElementById('pits');
+  const animLayer = document.getElementById('anim');
+  const status = document.getElementById('status');
+
+  function pitCenter(pit) {
+    const row = Math.floor(pit / 7);
+    const col = pit % 7;
+    return { x: COL_X[col], y: ROW_Y[row] };
+  }
+
+  function el(tag, attrs = {}) {
+    const e = document.createElementNS(SVG_NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function render() {
+    while (pitsLayer.firstChild) pitsLayer.removeChild(pitsLayer.firstChild);
+    for (let p = 0; p < 28; p++) {
+      const { x, y } = pitCenter(p);
+      const cls = 'pit' + (p === source ? ' source' : '');
+      pitsLayer.appendChild(el('circle', { cx: x, cy: y, r: PIT_R, class: cls }));
+      if (board[p] > 0) {
+        const t = el('text', { x, y, class: 'count' });
+        t.textContent = board[p];
+        pitsLayer.appendChild(t);
+      }
+    }
+  }
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  function flySeed(fromPit, toPit) {
+    return new Promise((resolve) => {
+      const from = pitCenter(fromPit);
+      const to = pitCenter(toPit);
+      const seedEl = el('ellipse', { rx: 5.2, ry: 3.2, class: 'seed flying' });
+      animLayer.appendChild(seedEl);
+
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const dist = Math.hypot(dx, dy);
+      const duration = Math.max(120, Math.min(240, dist * 1.8));
+      const arc = Math.min(22, 10 + dist * 0.08);
+      const t0 = performance.now();
+
+      function frame(now) {
+        const t = Math.min(1, (now - t0) / duration);
+        const eased = t * t * (3 - 2 * t);
+        const x = from.x + dx * eased;
+        const y = from.y + dy * eased - Math.sin(eased * Math.PI) * arc;
+        seedEl.setAttribute('cx', x);
+        seedEl.setAttribute('cy', y);
+        if (t < 1) requestAnimationFrame(frame);
+        else { seedEl.remove(); resolve(); }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  async function sow(destinations) {
+    status.textContent = 'animating...';
+    board[source] = destinations.length;  // seed count to start
+    render();
+    await sleep(220);
+
+    board[source] = 0;
+    render();
+    await sleep(160);
+
+    let prev = source;
+    for (const dest of destinations) {
+      await flySeed(prev, dest);
+      board[dest] += 1;
+      render();
+      prev = dest;
+    }
+
+    status.textContent = `done — flew ${destinations.length} seed${destinations.length > 1 ? 's' : ''} from pit ${source}. If you saw arcs with shadows, the animation primitive works.`;
+  }
+
+  function reset() {
+    board = new Array(28).fill(0);
+    board[source] = 0;
+    render();
+    status.textContent = 'reset. Click a sow button.';
+  }
+
+  document.getElementById('go-simple').addEventListener('click', () => sow([22, 23]));
+  document.getElementById('go-long').addEventListener('click', () => sow([22, 23, 24, 25, 26]));
+  document.getElementById('reset').addEventListener('click', reset);
+
+  render();
+</script>
+
+</body>
+</html>

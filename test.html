@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tsoro — Engine Tests</title>
+<style>
+  body { font-family: ui-monospace, Menlo, Consolas, monospace; padding: 24px; background: #1a1a1a; color: #ddd; }
+  h1 { color: #fff; }
+  pre { white-space: pre-wrap; background: #111; padding: 16px; border-radius: 6px; }
+  .pass { color: #5fd06a; }
+  .fail { color: #ff6b6b; }
+  .summary { font-size: 1.1em; margin-top: 12px; }
+</style>
+</head>
+<body>
+<h1>Tsoro — Engine Tests</h1>
+<pre id="out">Running...</pre>
+<script type="module">
+  import { runTests } from './engine.test.js';
+  const out = document.getElementById('out');
+  const lines = [];
+  const log = (s) => lines.push(s);
+  const { passed, failed, total } = runTests({ log });
+
+  const html = lines
+    .map((l) => {
+      if (l.includes('PASS')) return `<span class="pass">${l}</span>`;
+      if (l.includes('FAIL')) return `<span class="fail">${l}</span>`;
+      return l;
+    })
+    .join('\n');
+  const summaryClass = failed === 0 ? 'pass' : 'fail';
+  out.innerHTML = html + `\n\n<div class="summary ${summaryClass}">${passed}/${total} passed</div>`;
+</script>
+</body>
+</html>

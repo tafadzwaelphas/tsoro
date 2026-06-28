@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tsoro — Shona Mancala</title>
+<style>
+  :root {
+    --bg: #2a1f17;
+    --wood-light: #b8865a;
+    --wood-rim: #3a2310;
+    --cream: #f4e9d0;
+    --muted: #a89070;
+    --seed: #ead4a3;
+    --seed-rim: #6b4a1c;
+    --p1: #c8553d;
+    --p2: #3d8c8c;
+    --capture: #d94e2f;
+    --landing: #f0c75e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 28px 16px 40px;
+    background: radial-gradient(ellipse at top, #3a2a1f 0%, var(--bg) 65%);
+    color: var(--cream);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+  }
+  header { text-align: center; }
+  header h1 {
+    margin: 0;
+    font-family: "Georgia", "Iowan Old Style", serif;
+    font-size: 2.2rem;
+    letter-spacing: 0.04em;
+  }
+  .subtitle {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+
+  .turn-banner {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin: 22px 0 14px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(244,233,208,0.08);
+    font-size: 1.05rem;
+  }
+  .turn-banner .chip {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.25);
+  }
+  .turn-banner.p1 .chip { background: var(--p1); }
+  .turn-banner.p2 .chip { background: var(--p2); }
+  .turn-banner.ended .chip { background: var(--landing); }
+
+  .help-hint {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    max-width: 520px;
+    text-align: center;
+    line-height: 1.45;
+  }
+  .help-hint strong { color: var(--landing); font-weight: 600; }
+  .help-hint.scenario-active { color: var(--cream); }
+
+  .examples {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    align-items: center; justify-content: center;
+    margin: 0 0 16px;
+    font-size: 0.85rem;
+  }
+  .examples .label { color: var(--muted); margin-right: 4px; }
+  .ex-btn {
+    background: transparent;
+    color: var(--cream);
+    border: 1px solid rgba(244,233,208,0.25);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font: inherit;
+    cursor: pointer;
+    transition: background 100ms ease, border-color 100ms ease;
+  }
+  .ex-btn:hover {
+    background: rgba(240, 199, 94, 0.12);
+    border-color: var(--landing);
+    color: var(--landing);
+  }
+
+  svg#board {
+    width: 100%;
+    max-width: 780px;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 10px 28px rgba(0,0,0,0.45));
+  }
+
+  .row-label {
+    font-size: 11px;
+    fill: var(--cream);
+    opacity: 0.55;
+    font-family: "Georgia", serif;
+    font-style: italic;
+  }
+  .row-active {
+    fill: rgba(240, 199, 94, 0.08);
+    stroke: rgba(240, 199, 94, 0.35);
+    stroke-width: 1.5;
+  }
+  .pit-base {
+    fill: url(#pit-grad);
+    stroke: #2a1808;
+    stroke-width: 1.5;
+    transition: stroke 80ms ease, stroke-width 80ms ease;
+  }
+  .pit-base.legal {
+    stroke: var(--landing);
+    stroke-width: 3.5;
+    cursor: pointer;
+  }
+  .pit-base.legal:hover {
+    stroke: var(--cream);
+    stroke-width: 4;
+  }
+  .pit-base.hover-source {
+    stroke: var(--cream);
+    stroke-width: 4;
+  }
+  .seed.flying {
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,0.55));
+  }
+  .pit-base.capture-flash {
+    animation: captureFlash 1100ms ease-out;
+  }
+  .pit-base.landing-flash {
+    animation: landingFlash 900ms ease-out;
+  }
+  @keyframes captureFlash {
+    0%   { stroke: var(--capture); stroke-width: 6; }
+    60%  { stroke: var(--capture); stroke-width: 4; }
+    100% { stroke: #2a1808; stroke-width: 1.5; }
+  }
+  @keyframes landingFlash {
+    0%   { stroke: var(--landing); stroke-width: 6; }
+    100% { stroke: #2a1808; stroke-width: 1.5; }
+  }
+
+  .seed {
+    fill: var(--seed);
+    stroke: var(--seed-rim);
+    stroke-width: 0.6;
+    pointer-events: none;
+  }
+  .seed.ghost { opacity: 0.5; }
+
+  .pit-count {
+    fill: var(--cream);
+    opacity: 0.92;
+    font-family: "Georgia", serif;
+    font-weight: 700;
+    font-size: 15px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+  .pit-count.ghost { opacity: 0.55; }
+
+  .preview-capture-ring {
+    fill: none;
+    stroke: var(--capture);
+    stroke-width: 2.5;
+    stroke-dasharray: 4 3;
+    pointer-events: none;
+  }
+  .preview-landing-ring {
+    fill: none;
+    stroke: var(--landing);
+    stroke-width: 2.5;
+    pointer-events: none;
+  }
+
+  .controls { margin-top: 18px; }
+  button#reset {
+    background: var(--wood-light);
+    color: #2a1808;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  }
+  button#reset:hover { background: var(--cream); }
+
+  h3.log-heading {
+    color: var(--cream);
+    font-family: Georgia, serif;
+    font-weight: 500;
+    margin: 24px 0 6px;
+    align-self: flex-start;
+    max-width: 780px;
+    width: 100%;
+  }
+  #log {
+    width: 100%;
+    max-width: 780px;
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(244,233,208,0.08);
+    border-radius: 8px;
+    padding: 12px 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  #log .move-header { color: var(--cream); font-weight: 600; margin-top: 4px; }
+  #log .move-header.p1 { color: var(--p1); }
+  #log .move-header.p2 { color: var(--p2); }
+  #log .pickup { color: var(--muted); }
+  #log .relay { color: #7fc4d0; }
+  #log .capture { color: var(--capture); font-weight: 600; }
+  #log .turn-end { color: var(--muted); font-style: italic; }
+  #log .winner { color: var(--landing); font-weight: 700; font-size: 1.05em; margin-top: 6px; }
+  #log .err { color: var(--capture); }
+
+  footer {
+    margin-top: 28px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-align: center;
+    max-width: 600px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Tsoro</h1>
+  <p class="subtitle">Shona mancala · 4 rows × 7 holes</p>
+</header>
+
+<div class="turn-banner" id="turn"></div>
+<p class="help-hint" id="hint">
+  Click any <strong>glowing pit</strong> on your side to sow.
+  Pick a pit with ≥2 seeds; seeds travel one-by-one around your two rows.
+  Land your last seed in your inner row opposite enemy seeds to <strong>capture</strong>.
+</p>
+
+<div class="examples">
+  <span class="label">New here? Try a worked example:</span>
+  <button class="ex-btn" data-scenario="sowing">▶ Sowing</button>
+  <button class="ex-btn" data-scenario="capture">▶ Capture</button>
+  <button class="ex-btn" data-scenario="relay">▶ Relay</button>
+</div>
+
+<svg id="board" viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tsoro board">
+  <defs>
+    <radialGradient id="pit-grad" cx="50%" cy="42%" r="58%">
+      <stop offset="0%"  stop-color="#1a0e05"/>
+      <stop offset="60%" stop-color="#3a2410"/>
+      <stop offset="100%" stop-color="#5c3a1a"/>
+    </radialGradient>
+    <linearGradient id="wood-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#a87246"/>
+      <stop offset="50%"  stop-color="#8b5a2b"/>
+      <stop offset="100%" stop-color="#6e4523"/>
+    </linearGradient>
+    <pattern id="grain" patternUnits="userSpaceOnUse" width="4" height="160" patternTransform="rotate(3)">
+      <rect width="4" height="160" fill="url(#wood-grad)"/>
+      <line x1="1" y1="0" x2="1" y2="160" stroke="#000" stroke-opacity="0.05"/>
+      <line x1="3" y1="0" x2="3" y2="160" stroke="#fff" stroke-opacity="0.03"/>
+    </pattern>
+  </defs>
+  <g id="board-content"></g>
+  <g id="anim-layer"></g>
+  <g id="hand-layer"></g>
+</svg>
+
+<div class="controls">
+  <button id="reset">New game</button>
+</div>
+
+<h3 class="log-heading">Move log</h3>
+<div id="log"></div>
+
+<footer>
+  Hover a highlighted pit to preview the move — ghost seeds show where they'd land,
+  the gold ring marks the last seed, and dashed red rings mark pits that would be captured.
+</footer>
+
+<script type="module">
+  import {
+    initialState, legalMoves, applyMove,
+    P1, P2, ROWS, COLS, TOTAL_PITS,
+  } from './engine.js';
+
+  const DEFAULT_HINT = `
+    Click any <strong>glowing pit</strong> on your side to sow.
+    Pick a pit with ≥2 seeds; seeds travel one-by-one around your two rows.
+    Land your last seed in your inner row opposite enemy seeds to <strong>capture</strong>.
+  `;
+
+  const SCENARIOS = {
+    sowing: {
+      title: 'Sowing',
+      pits: { 22: 2, 0: 2 },
+      hint: `
+        <strong>Sowing.</strong> The glowing pit holds 2 seeds. Click it —
+        you pick them up and drop one per pit along your two-row loop.
+        Your last seed lands on an empty outer pit, so your turn just ends.
+        Direction is fixed for the whole game.
+      `,
+    },
+    capture: {
+      title: 'Capture',
+      pits: { 27: 2, 5: 2, 6: 2 },
+      hint: `
+        <strong>Capture.</strong> Click the glowing pit. Your 2 seeds drop
+        across the corner and your last seed lands in your inner row,
+        directly opposite the opponent's pile in that column.
+        Watch the red flash — those 2 seeds fly to your landing pit
+        and the engine keeps sowing them onward.
+      `,
+    },
+    relay: {
+      title: 'Relay',
+      pits: { 21: 3, 24: 1, 0: 2 },
+      hint: `
+        <strong>Relay.</strong> Click the glowing pit. Its 3 seeds sow into
+        the next 3 pits — but the last one lands on an outer pit that
+        already had a seed. That triggers a <em>relay</em>: pick up
+        everything in that pit and keep sowing. Your turn isn't over
+        until you land on an empty outer pit (or trigger a capture).
+      `,
+    },
+  };
+
+  function makeBoard(pits) {
+    const b = new Array(TOTAL_PITS).fill(0);
+    for (const [pit, n] of Object.entries(pits)) b[Number(pit)] = n;
+    return b;
+  }
+
+  function loadScenario(name) {
+    if (isAnimating) return;
+    const s = SCENARIOS[name];
+    if (!s) return;
+    state = { board: makeBoard(s.pits), turn: P1, phase: 'play', winner: null };
+    hoverPit = null;
+    flashCaptures = new Set();
+    flashLanding = null;
+    logEl.innerHTML = '';
+    const h = document.getElementById('hint');
+    h.innerHTML = s.hint;
+    h.classList.add('scenario-active');
+    render();
+  }
+
+  function resetToDefault() {
+    if (isAnimating) return;
+    state = initialState();
+    hoverPit = null;
+    flashCaptures = new Set();
+    flashLanding = null;
+    logEl.innerHTML = '';
+    const h = document.getElementById('hint');
+    h.innerHTML = DEFAULT_HINT;
+    h.classList.remove('scenario-active');
+    render();
+  }
+
+  const PIT_R = 30;
+  const COL_X = [70, 145, 220, 295, 370, 445, 520];
+  const ROW_Y = [55, 130, 205, 280];
+  const ROW_LABELS = [
+    'Player 2 — outer',
+    'Player 2 — inner',
+    'Player 1 — inner',
+    'Player 1 — outer',
+  ];
+  const PLAYER_NAMES = ['Player 1', 'Player 2'];
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  let state = initialState();
+  let hoverPit = null;
+  let flashCaptures = new Set();
+  let flashLanding = null;
+  let isAnimating = false;
+  let animatingPlayer = null;
+  let displayBoard = null; // when non-null, render uses this instead of state.board
+
+  const root = document.getElementById('board-content');
+  const animLayer = document.getElementById('anim-layer');
+  const handLayer = document.getElementById('hand-layer');
+  const turnEl = document.getElementById('turn');
+  const logEl = document.getElementById('log');
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  function pitCenter(pit) {
+    const row = Math.floor(pit / COLS);
+    const col = pit % COLS;
+    return { x: COL_X[col], y: ROW_Y[row], row, col };
+  }
+
+  function seedPositions(count, cx, cy) {
+    const u = 11;
+    const at = (...arr) => arr.map(([dx, dy]) => ({ x: cx + dx * u, y: cy + dy * u }));
+    switch (count) {
+      case 1: return at([0, 0]);
+      case 2: return at([-0.85, 0], [0.85, 0]);
+      case 3: return at([0, -0.9], [-0.8, 0.55], [0.8, 0.55]);
+      case 4: return at([-0.8, -0.75], [0.8, -0.75], [-0.8, 0.75], [0.8, 0.75]);
+      case 5: return at([0, 0], [-0.95, -0.85], [0.95, -0.85], [-0.95, 0.85], [0.95, 0.85]);
+      case 6: return at([-1.0, -0.85], [0, -0.85], [1.0, -0.85], [-1.0, 0.85], [0, 0.85], [1.0, 0.85]);
+      case 7: return at([0, 0], [-1.05, -0.95], [0, -1.05], [1.05, -0.95], [-1.05, 0.95], [0, 1.05], [1.05, 0.95]);
+      default: return null;
+    }
+  }
+
+  function el(tag, attrs = {}) {
+    const e = document.createElementNS(SVG_NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function computePreview() {
+    if (hoverPit === null || state.phase !== 'play') return null;
+    try {
+      const { state: next, events } = applyMove(state, hoverPit);
+      const capturedPits = new Set();
+      let landingPit = null;
+      for (const e of events) {
+        if (e.type === 'capture') e.from.forEach(p => capturedPits.add(p));
+        if (e.type === 'turn-end') landingPit = e.pit;
+      }
+      return { nextBoard: next.board, capturedPits, landingPit };
+    } catch {
+      return null;
+    }
+  }
+
+  function render() {
+    while (root.firstChild) root.removeChild(root.firstChild);
+
+    // Board background (wood grain) with carved inner inset
+    root.appendChild(el('rect', {
+      x: 8, y: 8, width: 704, height: 324, rx: 22, ry: 22,
+      fill: 'url(#grain)',
+      stroke: '#3a2310', 'stroke-width': 3,
+    }));
+    root.appendChild(el('rect', {
+      x: 22, y: 22, width: 676, height: 296, rx: 16, ry: 16,
+      fill: 'none', stroke: 'rgba(0,0,0,0.28)', 'stroke-width': 2,
+    }));
+
+    // Active player's two rows — subtle glow band
+    const activePlayer = isAnimating ? animatingPlayer : (state.phase === 'play' ? state.turn : null);
+    if (activePlayer !== null) {
+      const activeRows = activePlayer === P1 ? [2, 3] : [0, 1];
+      for (const r of activeRows) {
+        root.appendChild(el('rect', {
+          x: 38, y: ROW_Y[r] - PIT_R - 5,
+          width: 524, height: 2 * PIT_R + 10,
+          rx: 14, ry: 14,
+          class: 'row-active',
+        }));
+      }
+    }
+
+    // Row labels (right of pits)
+    for (let r = 0; r < ROWS; r++) {
+      const t = el('text', { x: 575, y: ROW_Y[r] + 4, class: 'row-label' });
+      t.textContent = ROW_LABELS[r];
+      root.appendChild(t);
+    }
+
+    const baseBoard = displayBoard ?? state.board;
+    const legal = isAnimating ? new Set() : new Set(legalMoves(state));
+    const preview = isAnimating ? null : computePreview();
+    const viewBoard = preview ? preview.nextBoard : baseBoard;
+
+    // Two-pass render: pits first, then preview rings on top so they're not occluded.
+    const ringQueue = [];
+
+    for (let pit = 0; pit < ROWS * COLS; pit++) {
+      const { x, y } = pitCenter(pit);
+      const seedsCurrent = baseBoard[pit];
+      const seedsView = viewBoard[pit];
+
+      const isLegal = legal.has(pit);
+      const isCapturedInPreview = !!(preview && preview.capturedPits.has(pit));
+      const isLandingInPreview = !!(preview && preview.landingPit === pit);
+      const isHoverSource = hoverPit === pit;
+      const isFlashCapture = flashCaptures.has(pit);
+      const isFlashLanding = flashLanding === pit;
+
+      const cls = ['pit-base'];
+      if (isLegal && !isHoverSource) cls.push('legal');
+      if (isHoverSource) cls.push('hover-source');
+      if (isFlashCapture) cls.push('capture-flash');
+      if (isFlashLanding) cls.push('landing-flash');
+
+      const circle = el('circle', { cx: x, cy: y, r: PIT_R, class: cls.join(' ') });
+      if (isLegal && state.phase === 'play' && !isAnimating) {
+        circle.style.cursor = 'pointer';
+        circle.addEventListener('click', () => onPitClick(pit));
+        circle.addEventListener('mouseenter', () => { hoverPit = pit; render(); });
+        circle.addEventListener('mouseleave', () => { hoverPit = null; render(); });
+      }
+      root.appendChild(circle);
+
+      // Render seeds. When previewing, "solid" seeds = how many remain that were already there;
+      // "ghost" seeds = newly arriving. Captured pits show empty.
+      if (seedsView > 7) {
+        const t = el('text', {
+          x, y,
+          class: 'pit-count' + (preview && seedsView !== seedsCurrent ? ' ghost' : ''),
+        });
+        t.textContent = seedsView;
+        root.appendChild(t);
+      } else if (seedsView > 0) {
+        const solidCount = isCapturedInPreview ? 0 : Math.min(seedsCurrent, seedsView);
+        const positions = seedPositions(seedsView, x, y);
+        if (positions) {
+          positions.forEach((p, i) => {
+            const tilt = ((pit * 73 + i * 47) % 180) - 90;
+            const isGhost = i >= solidCount;
+            root.appendChild(el('ellipse', {
+              cx: p.x, cy: p.y, rx: 5.2, ry: 3.2,
+              class: 'seed' + (isGhost ? ' ghost' : ''),
+              transform: `rotate(${tilt} ${p.x} ${p.y})`,
+            }));
+          });
+        }
+      }
+
+      if (isCapturedInPreview) ringQueue.push({ x, y, type: 'capture' });
+      if (isLandingInPreview) ringQueue.push({ x, y, type: 'landing' });
+    }
+
+    for (const r of ringQueue) {
+      root.appendChild(el('circle', {
+        cx: r.x, cy: r.y, r: PIT_R + 4,
+        class: r.type === 'capture' ? 'preview-capture-ring' : 'preview-landing-ring',
+      }));
+    }
+
+    // Turn banner
+    if (state.phase === 'ended') {
+      turnEl.className = 'turn-banner ended';
+      turnEl.innerHTML = `<span class="chip"></span><strong>${PLAYER_NAMES[state.winner]} wins</strong>`;
+    } else if (isAnimating) {
+      turnEl.className = `turn-banner p${animatingPlayer + 1}`;
+      turnEl.innerHTML = `<span class="chip"></span><strong>${PLAYER_NAMES[animatingPlayer]}</strong>&nbsp;sowing…`;
+    } else {
+      turnEl.className = `turn-banner p${state.turn + 1}`;
+      turnEl.innerHTML = `<span class="chip"></span><strong>${PLAYER_NAMES[state.turn]}</strong>&nbsp;to move`;
+    }
+  }
+
+  function describeEvent(e) {
+    if (e.type === 'pickup')   return { cls: 'pickup',   text: `pick up ${e.seeds} from pit ${e.pit}` };
+    if (e.type === 'relay')    return { cls: 'relay',    text: `relay at pit ${e.pit} (${e.seeds} seeds)` };
+    if (e.type === 'capture')  return { cls: 'capture',  text: `CAPTURE — ${e.seeds} from pits ${e.from.join(' & ')} (landed at ${e.at})` };
+    if (e.type === 'turn-end') return { cls: 'turn-end', text: `turn ends (${e.reason}) at pit ${e.pit}` };
+    return { cls: '', text: JSON.stringify(e) };
+  }
+
+  function logMove(player, sourcePit, events) {
+    const header = document.createElement('div');
+    header.className = `move-header p${player + 1}`;
+    header.textContent = `${PLAYER_NAMES[player]} plays pit ${sourcePit}`;
+    logEl.appendChild(header);
+    for (const e of events) {
+      if (e.type === 'sow') continue; // per-seed sow events drive animation, not the log
+      const { cls, text } = describeEvent(e);
+      const line = document.createElement('div');
+      line.className = cls;
+      line.textContent = `  ${text}`;
+      logEl.appendChild(line);
+    }
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  // Arc-flight primitive — same physics as demo-anim.html
+  function flySeed(fromPit, toPit) {
+    return new Promise((resolve) => {
+      const from = pitCenter(fromPit);
+      const to = pitCenter(toPit);
+      const seedEl = el('ellipse', { rx: 5.2, ry: 3.2, class: 'seed flying' });
+      animLayer.appendChild(seedEl);
+
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const dist = Math.hypot(dx, dy);
+      const duration = Math.max(120, Math.min(240, dist * 1.7));
+      const arcHeight = Math.min(24, 11 + dist * 0.08);
+      const t0 = performance.now();
+
+      function frame(now) {
+        const t = Math.min(1, (now - t0) / duration);
+        const eased = t * t * (3 - 2 * t);
+        const x = from.x + dx * eased;
+        const y = from.y + dy * eased - Math.sin(eased * Math.PI) * arcHeight;
+        seedEl.setAttribute('cx', x);
+        seedEl.setAttribute('cy', y);
+        if (t < 1) requestAnimationFrame(frame);
+        else { seedEl.remove(); resolve(); }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  // --- Hand-carry sowing primitives -------------------------------------------
+  // The seeds picked up from the source pit are carried as a single "hand" that
+  // hovers just above the pits and sheds exactly one seed into each pit it passes.
+
+  const HAND_LIFT = PIT_R + 6; // how far above a pit's centre the carried hand floats
+
+  function handCenter(pit) {
+    const c = pitCenter(pit);
+    return { x: c.x, y: c.y - HAND_LIFT };
+  }
+
+  // Tight cluster offsets (in px) for a hand holding up to 6 visible seeds.
+  function handOffsets(n) {
+    const u = 6;
+    const at = (...a) => a.map(([dx, dy]) => ({ dx: dx * u, dy: dy * u }));
+    switch (n) {
+      case 1: return at([0, 0]);
+      case 2: return at([-1, 0], [1, 0]);
+      case 3: return at([0, -0.9], [-0.9, 0.6], [0.9, 0.6]);
+      case 4: return at([-0.9, -0.8], [0.9, -0.8], [-0.9, 0.8], [0.9, 0.8]);
+      case 5: return at([0, 0], [-1, -0.9], [1, -0.9], [-1, 0.9], [1, 0.9]);
+      default: return at([-1, -0.9], [0, -0.9], [1, -0.9], [-1, 0.9], [0, 0.9], [1, 0.9]);
+    }
+  }
+
+  // Draw the carried hand of `count` seeds centred at (cx, cy). Clears any prior hand.
+  function drawHand(cx, cy, count) {
+    while (handLayer.firstChild) handLayer.removeChild(handLayer.firstChild);
+    if (count <= 0) return;
+    const show = Math.min(count, 6);
+    const offs = handOffsets(show);
+    for (let i = 0; i < show; i++) {
+      handLayer.appendChild(el('ellipse', {
+        cx: cx + offs[i].dx, cy: cy + offs[i].dy,
+        rx: 5.2, ry: 3.2, class: 'seed flying',
+      }));
+    }
+    if (count > 6) {
+      const t = el('text', { x: cx, y: cy - 11, class: 'pit-count' });
+      t.textContent = count;
+      handLayer.appendChild(t);
+    }
+  }
+
+  // Generic eased (smoothstep) tween; calls onFrame(progress 0..1) each rAF.
+  function tween(duration, onFrame) {
+    return new Promise((resolve) => {
+      const t0 = performance.now();
+      function step(now) {
+        const t = Math.min(1, (now - t0) / duration);
+        const eased = t * t * (3 - 2 * t);
+        onFrame(eased);
+        if (t < 1) requestAnimationFrame(step);
+        else resolve();
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  // Carry the whole hand from above one pit to above the next, with a small hop.
+  function moveHand(fromPit, toPit, count) {
+    const a = handCenter(fromPit);
+    const b = handCenter(toPit);
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const dist = Math.hypot(dx, dy);
+    const dur = Math.max(150, Math.min(260, dist * 1.6));
+    return tween(dur, (e) => {
+      const cx = a.x + dx * e;
+      const cy = a.y + dy * e - Math.sin(e * Math.PI) * 9;
+      drawHand(cx, cy, count);
+    });
+  }
+
+  // Shed one seed straight down from the hand into the pit, then settle it into the board.
+  // `remaining` is how many stay in the hand after this one leaves.
+  function dropOne(pit, remaining) {
+    const h = handCenter(pit);
+    const c = pitCenter(pit);
+    const stone = el('ellipse', { cx: h.x, cy: h.y, rx: 5.2, ry: 3.2, class: 'seed flying' });
+    animLayer.appendChild(stone);
+    drawHand(h.x, h.y, remaining); // the hand visibly loses one as the seed leaves
+    const dx = c.x - h.x, dy = c.y - h.y;
+    return tween(180, (e) => {
+      stone.setAttribute('cx', h.x + dx * e);
+      stone.setAttribute('cy', h.y + dy * e);
+    }).then(() => {
+      stone.remove();
+      displayBoard[pit] += 1;
+      render();
+      drawHand(h.x, h.y, remaining); // redraw hand on top of the freshly rendered board
+    });
+  }
+
+  // Replay engine events as a hand-carry sow: pick up the pile, carry it pit-to-pit,
+  // and drop exactly one seed into each pit. Relays/captures refill the hand.
+  async function animateMove(beforeBoard, events, player) {
+    try {
+      isAnimating = true;
+      animatingPlayer = player;
+      hoverPit = null;
+      flashCaptures = new Set();
+      flashLanding = null;
+      displayBoard = [...beforeBoard];
+      render();
+
+      let handCount = 0;
+      let handPit = null;
+
+      for (const e of events) {
+        if (e.type === 'pickup') {
+          displayBoard[e.pit] = 0;
+          render();
+          handCount = e.seeds;
+          handPit = e.pit;
+          const h = handCenter(e.pit);
+          drawHand(h.x, h.y, handCount); // lift the seeds out, hovering above the source
+          await sleep(240);
+        } else if (e.type === 'sow') {
+          await moveHand(handPit, e.pit, handCount);
+          handPit = e.pit;
+          handCount -= 1;
+          await dropOne(e.pit, handCount);
+          await sleep(45);
+        } else if (e.type === 'relay') {
+          // The last carried seed landed on a non-empty own outer pit: scoop it all up.
+          flashLanding = e.pit;
+          render();
+          await sleep(320);
+          displayBoard[e.pit] = 0;
+          flashLanding = null;
+          render();
+          handCount = e.seeds;
+          handPit = e.pit;
+          const h = handCenter(e.pit);
+          drawHand(h.x, h.y, handCount);
+          await sleep(160);
+        } else if (e.type === 'capture') {
+          flashCaptures = new Set(e.from);
+          flashLanding = e.at;
+          render();
+          await sleep(420);
+          await Promise.all([flySeed(e.from[0], e.at), flySeed(e.from[1], e.at)]);
+          displayBoard[e.from[0]] = 0;
+          displayBoard[e.from[1]] = 0;
+          flashCaptures = new Set();
+          flashLanding = null;
+          render();
+          // The captured seeds are now carried onward from the landing pit.
+          handCount = e.seeds;
+          handPit = e.at;
+          const h = handCenter(e.at);
+          drawHand(h.x, h.y, handCount);
+          await sleep(180);
+        } else if (e.type === 'turn-end') {
+          drawHand(0, 0, 0); // empty hand
+          flashLanding = e.pit;
+          render();
+          await sleep(560);
+          flashLanding = null;
+          render();
+        }
+      }
+
+      drawHand(0, 0, 0);
+      displayBoard = null;
+      isAnimating = false;
+      animatingPlayer = null;
+      render();
+    } catch (err) {
+      drawHand(0, 0, 0);
+      isAnimating = false;
+      animatingPlayer = null;
+      displayBoard = null;
+      console.error('[tsoro animateMove]', err);
+      render();
+    }
+  }
+
+  async function onPitClick(pit) {
+    if (isAnimating) return;
+    try {
+      const player = state.turn;
+      const beforeBoard = [...state.board];
+      const { state: next, events } = applyMove(state, pit);
+
+      hoverPit = null;
+      state = next;
+      logMove(player, pit, events);
+      if (state.phase === 'ended') {
+        const w = document.createElement('div');
+        w.className = 'winner';
+        w.textContent = `★ ${PLAYER_NAMES[state.winner]} wins the game`;
+        logEl.appendChild(w);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+      await animateMove(beforeBoard, events, player);
+    } catch (err) {
+      const line = document.createElement('div');
+      line.className = 'err';
+      line.textContent = `  error: ${err.message}`;
+      logEl.appendChild(line);
+    }
+  }
+
+  document.getElementById('reset').addEventListener('click', resetToDefault);
+
+  for (const btn of document.querySelectorAll('.ex-btn')) {
+    btn.addEventListener('click', () => loadScenario(btn.dataset.scenario));
+  }
+
+  render();
+</script>
+
+</body>
+</html>

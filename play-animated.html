@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tsoro — Animated play</title>
+<style>
+  body {
+    background: #2a1f17;
+    color: #ead4a3;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    padding: 24px 16px;
+    margin: 0;
+    text-align: center;
+  }
+  h1 { font-family: Georgia, serif; margin: 0 0 4px; color: #f0c75e; }
+  p.note { color: #a89070; max-width: 620px; margin: 4px auto 18px; font-size: 0.9em; line-height: 1.5; }
+
+  .turn { font-size: 1.15em; margin: 12px 0; font-style: italic; min-height: 1.4em; }
+  .turn.p1 { color: #6cc4ff; }
+  .turn.p2 { color: #ff9d6c; }
+  .turn.winner { color: #5fd06a; font-weight: 700; font-style: normal; }
+
+  svg.board {
+    background: linear-gradient(to bottom, #a87246, #6e4523);
+    border-radius: 16px;
+    max-width: 640px;
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+  }
+  .pit { fill: #3a2410; stroke: #2a1808; stroke-width: 1.5; cursor: default; }
+  .pit.legal { stroke: #f0c75e; stroke-width: 3.5; cursor: pointer; }
+  .pit.legal:hover { fill: #4a2f17; }
+  .pit.capture-flash { fill: #b03a2e; }
+  .pit.landing-flash { stroke: #f0c75e; stroke-width: 5; }
+  .seed { fill: #ead4a3; stroke: #6b4a1c; stroke-width: 0.6; }
+  .seed.flying { filter: drop-shadow(0 3px 3px rgba(0,0,0,0.55)); }
+  .count {
+    fill: #ead4a3; font-weight: 700;
+    text-anchor: middle; dominant-baseline: central;
+    font-size: 18px; pointer-events: none;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+  .row-label {
+    fill: #d8b888; font-size: 11px; text-anchor: end; dominant-baseline: central;
+    font-style: italic;
+  }
+
+  button.reset {
+    background: #b8865a; color: #2a1808;
+    border: none; padding: 10px 22px;
+    border-radius: 6px; cursor: pointer;
+    font: inherit; font-weight: 600;
+    margin: 14px 6px 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  button.reset:hover { background: #f0c75e; }
+
+  #log {
+    max-width: 620px; margin: 16px auto 0;
+    height: 200px; overflow-y: auto;
+    background: #1a120c; padding: 12px; border-radius: 8px;
+    text-align: left; font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.85em; white-space: pre-wrap; color: #c8b896;
+  }
+  .capture { color: #ffcc66; }
+  .relay { color: #66ccff; }
+  .turn-end { color: #888; }
+  .fail { color: #ff7766; }
+</style>
+</head>
+<body>
+
+<h1>Tsoro — Animated play</h1>
+<p class="note">
+  Phase 1 logic from <code>play.html</code> + flying-seed arc animation from <code>demo-anim.html</code>.
+  Click a gold-ringed pit to sow. Seeds visibly hop pit-to-pit; captures flash red, landings flash gold.
+</p>
+
+<div class="turn" id="turn"></div>
+<svg id="board" class="board" viewBox="0 0 620 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tsoro board">
+  <g id="labels"></g>
+  <g id="pits"></g>
+  <g id="anim"></g>
+</svg>
+<p><button class="reset" id="reset">↺ New game</button></p>
+
+<h3 style="color: #f0c75e; margin-bottom: 6px;">Move log</h3>
+<div id="log"></div>
+
+<script type="module">
+  import { initialState, legalMoves, applyMove, COLS } from './engine.js';
+
+  // --- SVG board geometry (matches demo-anim.html, scaled for the row label gutter) ---
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const PIT_R = 26;
+  const COL_X = [90, 165, 240, 315, 390, 465, 540];
+  const ROW_Y = [50, 115, 180, 245];
+  const ROW_LABELS = ['P2 outer', 'P2 inner', 'P1 inner', 'P1 outer'];
+
+  const boardEl = document.getElementById('board');
+  const labelsLayer = document.getElementById('labels');
+  const pitsLayer = document.getElementById('pits');
+  const animLayer = document.getElementById('anim');
+  const turnEl = document.getElementById('turn');
+  const logEl = document.getElementById('log');
+
+  let state = initialState();
+  let animating = false;
+  let animatingPlayer = null; // who is currently sowing during playback
+
+  // --- Helpers ---
+  const el = (tag, attrs = {}) => {
+    const e = document.createElementNS(SVG_NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  };
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const pitCenter = (pit) => ({ x: COL_X[pit % COLS], y: ROW_Y[Math.floor(pit / COLS)] });
+
+  // --- Row labels (drawn once) ---
+  for (let r = 0; r < 4; r++) {
+    const t = el('text', { x: 70, y: ROW_Y[r], class: 'row-label' });
+    t.textContent = ROW_LABELS[r];
+    labelsLayer.appendChild(t);
+  }
+
+  // --- Render the static board from `state.board` + legal-move highlights ---
+  function render() {
+    while (pitsLayer.firstChild) pitsLayer.removeChild(pitsLayer.firstChild);
+    const legal = new Set(animating ? [] : legalMoves(state));
+
+    for (let p = 0; p < 28; p++) {
+      const { x, y } = pitCenter(p);
+      const isLegal = legal.has(p);
+      const circle = el('circle', {
+        cx: x, cy: y, r: PIT_R,
+        class: 'pit' + (isLegal ? ' legal' : ''),
+        'data-pit': p,
+      });
+      if (isLegal) circle.addEventListener('click', () => onPitClick(p));
+      pitsLayer.appendChild(circle);
+
+      if (state.board[p] > 0) {
+        const t = el('text', { x, y, class: 'count' });
+        t.textContent = state.board[p];
+        pitsLayer.appendChild(t);
+      }
+    }
+
+    if (state.phase === 'ended') {
+      turnEl.className = 'turn winner';
+      turnEl.textContent = `Game over — P${state.winner + 1} wins!`;
+    } else if (animating) {
+      turnEl.className = `turn p${animatingPlayer + 1}`;
+      turnEl.textContent = `P${animatingPlayer + 1} sowing…`;
+    } else {
+      turnEl.className = `turn p${state.turn + 1}`;
+      turnEl.textContent = `P${state.turn + 1}'s turn`;
+    }
+  }
+
+  // --- The flying-seed primitive, lifted from demo-anim.html ---
+  function flySeed(fromPit, toPit) {
+    return new Promise((resolve) => {
+      const from = pitCenter(fromPit);
+      const to = pitCenter(toPit);
+      const seedEl = el('ellipse', { rx: 5.6, ry: 3.4, class: 'seed flying' });
+      animLayer.appendChild(seedEl);
+
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const dist = Math.hypot(dx, dy);
+      const duration = Math.max(140, Math.min(260, dist * 1.8));
+      const arc = Math.min(26, 12 + dist * 0.08);
+      const t0 = performance.now();
+
+      function frame(now) {
+        const t = Math.min(1, (now - t0) / duration);
+        const eased = t * t * (3 - 2 * t);
+        const x = from.x + dx * eased;
+        const y = from.y + dy * eased - Math.sin(eased * Math.PI) * arc;
+        seedEl.setAttribute('cx', x);
+        seedEl.setAttribute('cy', y);
+        if (t < 1) requestAnimationFrame(frame);
+        else { seedEl.remove(); resolve(); }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  // --- Flash a pit by adding a CSS class for `ms`, then removing it ---
+  async function flashPit(pit, cls, ms) {
+    const c = pitsLayer.querySelector(`circle[data-pit="${pit}"]`);
+    if (!c) return;
+    c.classList.add(cls);
+    await sleep(ms);
+    c.classList.remove(cls);
+  }
+
+  // --- Replay engine events with animation. Mutates `displayBoard` and re-renders between steps. ---
+  async function animateEvents(events, displayBoard) {
+    // Replace the rendered counts with `displayBoard` instead of `state.board` during playback.
+    const realBoard = state.board;
+    state = { ...state, board: displayBoard };
+    render();
+
+    let flyFrom = -1; // updated by pickup / relay / capture; consumed by next `sow`
+
+    for (const e of events) {
+      if (e.type === 'pickup') {
+        flyFrom = e.pit;
+        displayBoard[e.pit] = 0;
+        render();
+        await sleep(160);
+      } else if (e.type === 'sow') {
+        await flySeed(flyFrom, e.pit);
+        displayBoard[e.pit]++;
+        flyFrom = e.pit;
+        render();
+      } else if (e.type === 'relay') {
+        // The seeds just sown into this pit are being picked back up.
+        displayBoard[e.pit] = 0;
+        flyFrom = e.pit;
+        render();
+        await sleep(180);
+      } else if (e.type === 'capture') {
+        // Flash captured pits red, fly their seeds to the landing pit, then zero them.
+        const [a, b] = e.from;
+        flashPit(a, 'capture-flash', 380);
+        flashPit(b, 'capture-flash', 380);
+        await flashPit(e.at, 'landing-flash', 380);
+        await Promise.all([flySeed(a, e.at), flySeed(b, e.at)]);
+        displayBoard[a] = 0;
+        displayBoard[b] = 0;
+        flyFrom = e.at;
+        render();
+        await sleep(120);
+      } else if (e.type === 'turn-end') {
+        await sleep(120);
+      }
+    }
+
+    // Animation done — restore the real (post-move) board as authoritative.
+    state = { ...state, board: realBoard };
+  }
+
+  // --- Log panel (kept from play.html) ---
+  function describeEvent(e) {
+    if (e.type === 'pickup') return { cls: '', text: `pickup: ${e.seeds} seeds from pit ${e.pit}` };
+    if (e.type === 'sow')    return { cls: '', text: `  sow → pit ${e.pit}` };
+    if (e.type === 'relay')  return { cls: 'relay', text: `relay at pit ${e.pit} (${e.seeds} seeds)` };
+    if (e.type === 'capture') return { cls: 'capture', text: `CAPTURE: ${e.seeds} seeds from pits ${e.from.join(' & ')} (last sown at ${e.at})` };
+    if (e.type === 'turn-end') return { cls: 'turn-end', text: `turn ends — ${e.reason} at pit ${e.pit}` };
+    return { cls: '', text: JSON.stringify(e) };
+  }
+
+  function logMove(player, sourcePit, events) {
+    const lines = [`P${player + 1} plays pit ${sourcePit}`];
+    for (const e of events) {
+      if (e.type === 'sow') continue; // too noisy in the log; the animation shows it
+      const { cls, text } = describeEvent(e);
+      lines.push(`  <span class="${cls}">${text}</span>`);
+    }
+    logEl.innerHTML += lines.join('\n') + '\n';
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  // --- Click handler ---
+  async function onPitClick(pit) {
+    if (animating) return;
+    try {
+      const player = state.turn;
+      const { state: next, events } = applyMove(state, pit);
+
+      animating = true;
+      animatingPlayer = player;
+      // Display board starts at the *pre-move* snapshot and is mutated step-by-step.
+      const displayBoard = [...state.board];
+      state = next; // adopt the real post-move state now; displayBoard drives rendering during playback
+      await animateEvents(events, displayBoard);
+      animating = false;
+      animatingPlayer = null;
+
+      logMove(player, pit, events);
+      render();
+    } catch (err) {
+      animating = false;
+      animatingPlayer = null;
+      logEl.innerHTML += `  <span class="fail">error: ${err.message}</span>\n`;
+      render();
+    }
+  }
+
+  document.getElementById('reset').addEventListener('click', () => {
+    if (animating) return;
+    state = initialState();
+    logEl.innerHTML = '';
+    render();
+  });
+
+  render();
+</script>
+
+</body>
+</html>

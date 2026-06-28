@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tsoro — Shona Mancala</title>
+<style>
+  :root {
+    --bg: #2a1f17;
+    --wood-light: #b8865a;
+    --wood-rim: #3a2310;
+    --cream: #f4e9d0;
+    --muted: #a89070;
+    --seed: #ead4a3;
+    --seed-rim: #6b4a1c;
+    --p1: #c8553d;
+    --p2: #3d8c8c;
+    --capture: #d94e2f;
+    --landing: #f0c75e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 28px 16px 40px;
+    background: radial-gradient(ellipse at top, #3a2a1f 0%, var(--bg) 65%);
+    color: var(--cream);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+  }
+  header { text-align: center; }
+  header h1 {
+    margin: 0;
+    font-family: "Georgia", "Iowan Old Style", serif;
+    font-size: 2.2rem;
+    letter-spacing: 0.04em;
+  }
+  .subtitle {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+
+  .turn-banner {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin: 22px 0 14px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(244,233,208,0.08);
+    font-size: 1.05rem;
+  }
+  .turn-banner .chip {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.25);
+  }
+  .turn-banner.p1 .chip { background: var(--p1); }
+  .turn-banner.p2 .chip { background: var(--p2); }
+  .turn-banner.ended .chip { background: var(--landing); }
+
+  .help-hint {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    max-width: 520px;
+    text-align: center;
+    line-height: 1.45;
+  }
+  .help-hint strong { color: var(--landing); font-weight: 600; }
+  .help-hint.scenario-active { color: var(--cream); }
+
+  .examples {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    align-items: center; justify-content: center;
+    margin: 0 0 16px;
+    font-size: 0.85rem;
+  }
+  .examples .label { color: var(--muted); margin-right: 4px; }
+  .ex-btn {
+    background: transparent;
+    color: var(--cream);
+    border: 1px solid rgba(244,233,208,0.25);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font: inherit;
+    cursor: pointer;
+  }
+  .ex-btn:hover {
+    background: rgba(240, 199, 94, 0.12);
+    border-color: var(--landing);
+    color: var(--landing);
+  }
+
+  svg#board {
+    width: 100%;
+    max-width: 780px;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 10px 28px rgba(0,0,0,0.45));
+  }
+
+  .row-label {
+    font-size: 11px;
+    fill: var(--cream);
+    opacity: 0.55;
+    font-family: "Georgia", serif;
+    font-style: italic;
+  }
+  .row-active {
+    fill: rgba(240, 199, 94, 0.08);
+    stroke: rgba(240, 199, 94, 0.35);
+    stroke-width: 1.5;
+  }
+  .pit-base {
+    fill: url(#pit-grad);
+    stroke: #2a1808;
+    stroke-width: 1.5;
+  }
+  .pit-base.legal {
+    stroke: var(--landing);
+    stroke-width: 3.5;
+    cursor: pointer;
+  }
+  .pit-base.legal:hover {
+    stroke: var(--cream);
+    stroke-width: 4;
+  }
+  .seed {
+    fill: var(--seed);
+    stroke: var(--seed-rim);
+    stroke-width: 0.6;
+    pointer-events: none;
+  }
+  .seed.flying {
+    filter: drop-shadow(0 4px 5px rgba(0,0,0,0.65));
+  }
+  .pit-count {
+    fill: var(--cream);
+    opacity: 0.92;
+    font-family: "Georgia", serif;
+    font-weight: 700;
+    font-size: 15px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  .controls { margin-top: 18px; display: flex; gap: 10px; }
+  .controls button {
+    background: var(--wood-light);
+    color: #2a1808;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  }
+  .controls button:hover:not(:disabled) { background: var(--cream); }
+  .controls button:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+
+  h3.log-heading {
+    color: var(--cream);
+    font-family: Georgia, serif;
+    font-weight: 500;
+    margin: 24px 0 6px;
+    align-self: flex-start;
+    max-width: 780px;
+    width: 100%;
+  }
+  #log {
+    width: 100%;
+    max-width: 780px;
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(244,233,208,0.08);
+    border-radius: 8px;
+    padding: 12px 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  #log .move-header { color: var(--cream); font-weight: 600; margin-top: 4px; }
+  #log .move-header.p1 { color: var(--p1); }
+  #log .move-header.p2 { color: var(--p2); }
+  #log .pickup { color: var(--muted); }
+  #log .relay { color: #7fc4d0; }
+  #log .capture { color: var(--capture); font-weight: 600; }
+  #log .turn-end { color: var(--muted); font-style: italic; }
+  #log .winner { color: var(--landing); font-weight: 700; font-size: 1.05em; margin-top: 6px; }
+  #log .err { color: var(--capture); }
+
+  #endgame-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 12, 6, 0.78);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  #endgame-overlay.visible { display: flex; }
+  .endgame-card {
+    background: #3a2410;
+    border: 1px solid rgba(244,233,208,0.15);
+    border-radius: 16px;
+    padding: 44px 56px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    max-width: 360px;
+  }
+  .endgame-card .trophy { font-size: 3rem; margin-bottom: 12px; }
+  .endgame-card .winner-name {
+    font-family: "Georgia", serif;
+    font-size: 1.6rem;
+    color: var(--landing);
+    margin: 0 0 6px;
+  }
+  .endgame-card .winner-sub {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 0 28px;
+  }
+  .endgame-card button {
+    background: var(--wood-light);
+    color: #2a1808;
+    border: none;
+    padding: 11px 28px;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  }
+  .endgame-card button:hover { background: var(--cream); }
+
+  footer {
+    margin-top: 28px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-align: center;
+    max-width: 600px;
+  }
+
+  .mode-select {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    align-items: center; justify-content: center;
+    margin: 16px 0 0;
+    font-size: 0.85rem;
+  }
+  .mode-select .label { color: var(--muted); margin-right: 2px; }
+  .mode-btn {
+    background: transparent;
+    color: var(--cream);
+    border: 1px solid rgba(244,233,208,0.25);
+    padding: 5px 13px;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .mode-btn:hover { background: rgba(240,199,94,0.12); border-color: var(--landing); }
+  .mode-btn.active { background: rgba(240,199,94,0.18); border-color: var(--landing); color: var(--landing); }
+
+  @media (max-width: 480px) {
+    body { padding: 14px 10px 28px; }
+    header h1 { font-size: 1.65rem; }
+    .mode-select { margin: 10px 0 0; gap: 5px; }
+    .mode-btn { padding: 4px 10px; font-size: 0.76rem; }
+    .subtitle { font-size: 0.8rem; }
+    .turn-banner { margin: 12px 0 8px; padding: 8px 14px; font-size: 0.95rem; }
+    .help-hint { font-size: 0.82rem; margin-bottom: 8px; }
+    .examples { margin-bottom: 8px; gap: 6px; }
+    .examples .label { display: none; }
+    .ex-btn { padding: 5px 11px; font-size: 0.8rem; }
+    .controls { margin-top: 12px; }
+    h3.log-heading { font-size: 0.9rem; margin: 14px 0 4px; }
+    #log { font-size: 0.78rem; max-height: 140px; padding: 10px 12px; }
+    .endgame-card { padding: 28px 24px; margin: 0 16px; }
+    .endgame-card .trophy { font-size: 2.4rem; }
+    .endgame-card .winner-name { font-size: 1.35rem; }
+    footer { margin-top: 20px; font-size: 0.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Tsoro</h1>
+  <p class="subtitle">Shona mancala · 4 rows × 7 holes</p>
+</header>
+
+<div class="mode-select">
+  <span class="label">Mode:</span>
+  <button class="mode-btn active" data-mode="2p">2-Player</button>
+  <button class="mode-btn" data-mode="easy">Easy AI</button>
+  <button class="mode-btn" data-mode="medium">Medium AI</button>
+  <button class="mode-btn" data-mode="hard">Hard AI</button>
+</div>
+
+<div class="turn-banner" id="turn"></div>
+<p class="help-hint" id="hint">
+  Click any <strong>glowing pit</strong> on your side to sow.
+  Pick a pit with ≥2 seeds; seeds travel one-by-one around your two rows.
+  Land your last seed in your inner row opposite enemy seeds to <strong>capture</strong>.
+</p>
+
+<div class="examples">
+  <span class="label">New here? Try a worked example:</span>
+  <button class="ex-btn" data-scenario="sowing">▶ Sowing</button>
+  <button class="ex-btn" data-scenario="capture">▶ Capture</button>
+  <button class="ex-btn" data-scenario="relay">▶ Relay</button>
+</div>
+
+<svg id="board" viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tsoro board">
+  <defs>
+    <radialGradient id="pit-grad" cx="50%" cy="42%" r="58%">
+      <stop offset="0%"  stop-color="#1a0e05"/>
+      <stop offset="60%" stop-color="#3a2410"/>
+      <stop offset="100%" stop-color="#5c3a1a"/>
+    </radialGradient>
+    <linearGradient id="wood-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#a87246"/>
+      <stop offset="50%"  stop-color="#8b5a2b"/>
+      <stop offset="100%" stop-color="#6e4523"/>
+    </linearGradient>
+    <pattern id="grain" patternUnits="userSpaceOnUse" width="4" height="160" patternTransform="rotate(3)">
+      <rect width="4" height="160" fill="url(#wood-grad)"/>
+      <line x1="1" y1="0" x2="1" y2="160" stroke="#000" stroke-opacity="0.05"/>
+      <line x1="3" y1="0" x2="3" y2="160" stroke="#fff" stroke-opacity="0.03"/>
+    </pattern>
+  </defs>
+  <g id="board-content"></g>
+  <g id="anim-layer"></g>
+</svg>
+
+<div class="controls">
+  <button id="reset">New game</button>
+  <button id="undo" disabled>Undo</button>
+</div>
+
+<div id="endgame-overlay">
+  <div class="endgame-card">
+    <div class="trophy">🏆</div>
+    <p class="winner-name" id="overlay-winner"></p>
+    <p class="winner-sub">wins the game</p>
+    <button id="overlay-reset">Play again</button>
+  </div>
+</div>
+
+<h3 class="log-heading">Move log</h3>
+<div id="log"></div>
+
+<footer>
+  Gold-ringed pits are your legal moves. Click one — seeds arc through the air to each destination in turn.
+</footer>
+
+<script type="module">
+  import {
+    initialState, legalMoves, applyMove,
+    P1, P2, ROWS, COLS, TOTAL_PITS,
+  } from './engine.js';
+  import { getAIMove } from './ai.js';
+
+  const DEFAULT_HINT = `
+    Click any <strong>glowing pit</strong> on your side to sow.
+    Pick a pit with ≥2 seeds; seeds travel one-by-one around your two rows.
+    Land your last seed in your inner row opposite enemy seeds to <strong>capture</strong>.
+  `;
+
+  const SCENARIOS = {
+    sowing: {
+      pits: { 22: 2, 0: 2 },
+      hint: `
+        <strong>Sowing.</strong> The glowing pit holds 2 seeds. Click it —
+        watch them arc out and drop one per pit along your two-row loop.
+        Your last seed lands on an empty outer pit, so your turn ends.
+      `,
+    },
+    capture: {
+      pits: { 27: 2, 5: 2, 6: 2 },
+      hint: `
+        <strong>Capture.</strong> Click the glowing pit. Your 2 seeds arc out
+        and the last lands in your inner row opposite the opponent's pile.
+        Those seeds are captured and sowing continues with them.
+      `,
+    },
+    relay: {
+      pits: { 21: 3, 24: 1, 0: 2 },
+      hint: `
+        <strong>Relay.</strong> Click the glowing pit. Its 3 seeds sow into
+        the next 3 pits — but the last lands on a non-empty outer pit.
+        That triggers a relay: everything there gets picked up and sowing continues.
+      `,
+    },
+  };
+
+  function makeBoard(pits) {
+    const b = new Array(TOTAL_PITS).fill(0);
+    for (const [pit, n] of Object.entries(pits)) b[Number(pit)] = n;
+    return b;
+  }
+
+  const PIT_R   = 30;
+  const COL_X   = [70, 145, 220, 295, 370, 445, 520];
+  const ROW_Y   = [55, 130, 205, 280];
+  const ROW_LABELS = ['Player 2 — outer', 'Player 2 — inner', 'Player 1 — inner', 'Player 1 — outer'];
+  const SVG_NS  = 'http://www.w3.org/2000/svg';
+
+  let state       = initialState();
+  let isAnimating = false;
+  let history     = []; // stack of {state, logHTML} snapshots
+  let aiMode      = '2p'; // '2p' | 'easy' | 'medium' | 'hard'
+
+  const PLAYER_NAMES = ['Player 1', 'Player 2'];
+  function playerName(p) {
+    return aiMode === '2p' ? PLAYER_NAMES[p] : (p === P1 ? 'You' : 'AI');
+  }
+  let displayBoard = null; // non-null while animating; render uses this instead of state.board
+
+  const root      = document.getElementById('board-content');
+  const animLayer = document.getElementById('anim-layer');
+  const turnEl    = document.getElementById('turn');
+  const logEl     = document.getElementById('log');
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  function pitCenter(pit) {
+    return { x: COL_X[pit % COLS], y: ROW_Y[Math.floor(pit / COLS)] };
+  }
+
+  function seedPositions(count, cx, cy) {
+    const u = 11;
+    const at = (...arr) => arr.map(([dx, dy]) => ({ x: cx + dx * u, y: cy + dy * u }));
+    switch (count) {
+      case 1: return at([0, 0]);
+      case 2: return at([-0.85, 0], [0.85, 0]);
+      case 3: return at([0, -0.9], [-0.8, 0.55], [0.8, 0.55]);
+      case 4: return at([-0.8, -0.75], [0.8, -0.75], [-0.8, 0.75], [0.8, 0.75]);
+      case 5: return at([0, 0], [-0.95, -0.85], [0.95, -0.85], [-0.95, 0.85], [0.95, 0.85]);
+      case 6: return at([-1.0, -0.85], [0, -0.85], [1.0, -0.85], [-1.0, 0.85], [0, 0.85], [1.0, 0.85]);
+      case 7: return at([0, 0], [-1.05, -0.95], [0, -1.05], [1.05, -0.95], [-1.05, 0.95], [0, 1.05], [1.05, 0.95]);
+      default: return null;
+    }
+  }
+
+  function svgEl(tag, attrs = {}) {
+    const e = document.createElementNS(SVG_NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function render() {
+    while (root.firstChild) root.removeChild(root.firstChild);
+
+    // Board background
+    root.appendChild(svgEl('rect', { x: 8, y: 8, width: 704, height: 324, rx: 22, ry: 22,
+      fill: 'url(#grain)', stroke: '#3a2310', 'stroke-width': 3 }));
+    root.appendChild(svgEl('rect', { x: 22, y: 22, width: 676, height: 296, rx: 16, ry: 16,
+      fill: 'none', stroke: 'rgba(0,0,0,0.28)', 'stroke-width': 2 }));
+
+    // Active player row glow
+    if (state.phase === 'play') {
+      for (const r of (state.turn === P1 ? [2, 3] : [0, 1])) {
+        root.appendChild(svgEl('rect', {
+          x: 38, y: ROW_Y[r] - PIT_R - 5, width: 524, height: 2 * PIT_R + 10,
+          rx: 14, ry: 14, class: 'row-active',
+        }));
+      }
+    }
+
+    // Row labels
+    for (let r = 0; r < ROWS; r++) {
+      const t = svgEl('text', { x: 575, y: ROW_Y[r] + 4, class: 'row-label' });
+      t.textContent = ROW_LABELS[r];
+      root.appendChild(t);
+    }
+
+    const board = displayBoard ?? state.board;
+    const legal = isAnimating ? new Set() : new Set(legalMoves(state));
+
+    for (let pit = 0; pit < ROWS * COLS; pit++) {
+      const { x, y } = pitCenter(pit);
+      const count    = board[pit];
+      const isLegal  = legal.has(pit);
+
+      const circle = svgEl('circle', { cx: x, cy: y, r: PIT_R,
+        class: 'pit-base' + (isLegal ? ' legal' : '') });
+      if (isLegal && !isAnimating) {
+        circle.addEventListener('click', () => executeMove(pit, true));
+      }
+      root.appendChild(circle);
+
+      if (count > 7) {
+        const t = svgEl('text', { x, y, class: 'pit-count' });
+        t.textContent = count;
+        root.appendChild(t);
+      } else {
+        const positions = seedPositions(count, x, y);
+        if (positions) {
+          positions.forEach((p, i) => {
+            const tilt = ((pit * 73 + i * 47) % 180) - 90;
+            root.appendChild(svgEl('ellipse', {
+              cx: p.x, cy: p.y, rx: 5.2, ry: 3.2, class: 'seed',
+              transform: `rotate(${tilt} ${p.x} ${p.y})`,
+            }));
+          });
+        }
+      }
+    }
+
+    // Turn banner
+    if (state.phase === 'ended') {
+      turnEl.className = 'turn-banner ended';
+      turnEl.innerHTML = `<span class="chip"></span><strong>${playerName(state.winner)} wins</strong>`;
+    } else {
+      turnEl.className = `turn-banner p${state.turn + 1}`;
+      turnEl.innerHTML = `<span class="chip"></span><strong>${playerName(state.turn)}</strong>&nbsp;to move`;
+    }
+  }
+
+  // Fly one seed from fromPit to toPit.
+  // `delay` ms before launch, `duration` ms for the arc flight.
+  function flySeed(fromPit, toPit, delay, duration) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const from = pitCenter(fromPit);
+        const to   = pitCenter(toPit);
+        const dx   = to.x - from.x;
+        const dy   = to.y - from.y;
+        const dist = Math.hypot(dx, dy);
+        const arcH = Math.max(32, Math.min(80, dist * 0.15));
+
+        const seedEl = document.createElementNS(SVG_NS, 'ellipse');
+        seedEl.setAttribute('rx', '5.2');
+        seedEl.setAttribute('ry', '3.2');
+        seedEl.setAttribute('class', 'seed flying');
+        animLayer.appendChild(seedEl);
+
+        const startT = performance.now();
+        function frame(now) {
+          const t      = Math.min(1, (now - startT) / duration);
+          const eased  = t * t * (3 - 2 * t); // smoothstep
+          const x      = from.x + dx * eased;
+          const y      = from.y + dy * eased - Math.sin(eased * Math.PI) * arcH;
+          seedEl.setAttribute('cx', x);
+          seedEl.setAttribute('cy', y);
+          if (t < 1) requestAnimationFrame(frame);
+          else { seedEl.remove(); resolve(); }
+        }
+        requestAnimationFrame(frame);
+      }, delay);
+    });
+  }
+
+  // Fly all seeds in destPits simultaneously (staggered launches) from sourcePit.
+  // If emptySource, source pit is visually cleared before seeds depart.
+  // Captured seeds (emptySource=false) emerge from sourcePit without depleting it.
+  async function animateBatch(sourcePit, destPits, emptySource) {
+    const STAGGER  = 70;   // ms between each seed's launch
+    const DURATION = 560;  // ms per seed arc flight
+
+    if (emptySource) displayBoard[sourcePit] = 0;
+    render();
+
+    await Promise.all(
+      destPits.map((destPit, i) =>
+        flySeed(sourcePit, destPit, i * STAGGER, DURATION).then(() => {
+          displayBoard[destPit] += 1;
+          render();
+        })
+      )
+    );
+  }
+
+  async function animateMove(beforeBoard, events) {
+    isAnimating  = true;
+    displayBoard = [...beforeBoard];
+    render();
+    await sleep(90); // brief pause so the user sees the board before seeds launch
+
+    let sourcePit   = null;
+    let sowBatch    = [];
+    let emptySource = true; // false after a capture (landing seed stays in pit)
+
+    async function flushBatch() {
+      if (sowBatch.length && sourcePit !== null) {
+        await animateBatch(sourcePit, sowBatch, emptySource);
+        sowBatch    = [];
+        emptySource = true;
+      }
+    }
+
+    for (const e of events) {
+      if (e.type === 'pickup') {
+        sourcePit = e.pit;
+
+      } else if (e.type === 'sow') {
+        sowBatch.push(e.pit);
+
+      } else if (e.type === 'relay') {
+        // The relay-triggering sow is already in sowBatch — flush it first.
+        await flushBatch();
+        await sleep(180); // pause so the user sees the relay pit before it's picked up
+        sourcePit   = e.pit;
+        emptySource = true; // relay pit gets emptied
+
+      } else if (e.type === 'capture') {
+        // The capture-triggering sow is already in sowBatch — flush first.
+        await flushBatch();
+        // Clear captured pits and pause so the user sees what was taken.
+        displayBoard[e.from[0]] = 0;
+        displayBoard[e.from[1]] = 0;
+        render();
+        await sleep(280);
+        sourcePit   = e.at;
+        emptySource = false; // captured seeds emerge from landing pit without depleting it
+
+      } else if (e.type === 'turn-end') {
+        await flushBatch();
+      }
+    }
+
+    await flushBatch(); // safety flush
+    displayBoard = null;
+    isAnimating  = false;
+    render();
+  }
+
+  function describeEvent(e) {
+    if (e.type === 'pickup')   return { cls: 'pickup',   text: `pick up ${e.seeds} from pit ${e.pit}` };
+    if (e.type === 'relay')    return { cls: 'relay',    text: `relay at pit ${e.pit} (${e.seeds} seeds)` };
+    if (e.type === 'capture')  return { cls: 'capture',  text: `CAPTURE — ${e.seeds} from pits ${e.from.join(' & ')} (landed at ${e.at})` };
+    if (e.type === 'turn-end') return { cls: 'turn-end', text: `turn ends (${e.reason}) at pit ${e.pit}` };
+    return { cls: '', text: JSON.stringify(e) };
+  }
+
+  function logMove(player, sourcePit, events) {
+    const header = document.createElement('div');
+    header.className = `move-header p${player + 1}`;
+    header.textContent = `${playerName(player)} plays pit ${sourcePit}`;
+    logEl.appendChild(header);
+    for (const e of events) {
+      if (e.type === 'sow') continue;
+      const { cls, text } = describeEvent(e);
+      const line = document.createElement('div');
+      line.className = cls;
+      line.textContent = `  ${text}`;
+      logEl.appendChild(line);
+    }
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  const undoBtn = document.getElementById('undo');
+  function syncUndoBtn() {
+    undoBtn.disabled = isAnimating || history.length === 0;
+  }
+
+  async function executeMove(pit, isHuman) {
+    if (isAnimating) return;
+    try {
+      if (isHuman) history.push({ state, logHTML: logEl.innerHTML });
+      syncUndoBtn();
+      const player      = state.turn;
+      const beforeBoard = [...state.board];
+      const { state: next, events } = applyMove(state, pit);
+      state = next;
+      logMove(player, pit, events);
+      if (state.phase === 'ended') {
+        const w = document.createElement('div');
+        w.className = 'winner';
+        w.textContent = `★ ${playerName(state.winner)} wins the game`;
+        logEl.appendChild(w);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+      await animateMove(beforeBoard, events);
+      syncUndoBtn();
+      if (state.phase === 'ended') {
+        showEndgame(state.winner);
+      } else if (aiMode !== '2p' && state.turn === P2) {
+        await runAI();
+      }
+    } catch (err) {
+      const line = document.createElement('div');
+      line.className = 'err';
+      line.textContent = `  error: ${err.message}`;
+      logEl.appendChild(line);
+    }
+  }
+
+  async function runAI() {
+    isAnimating = true;
+    syncUndoBtn();
+    turnEl.className = 'turn-banner p2';
+    turnEl.innerHTML = `<span class="chip"></span><em style="opacity:0.7">AI thinking…</em>`;
+    await sleep(420);
+    const pit = getAIMove(state, aiMode);
+    isAnimating = false;
+    if (pit !== null) await executeMove(pit, false);
+  }
+
+  undoBtn.addEventListener('click', () => {
+    if (isAnimating || history.length === 0) return;
+    hideEndgame();
+    const snap = history.pop();
+    state = snap.state;
+    logEl.innerHTML = snap.logHTML;
+    displayBoard = null;
+    syncUndoBtn();
+    render();
+  });
+
+  const overlayEl      = document.getElementById('endgame-overlay');
+  const overlayWinner  = document.getElementById('overlay-winner');
+  const overlayReset   = document.getElementById('overlay-reset');
+
+  function showEndgame(winner) {
+    overlayWinner.textContent = playerName(winner);
+    overlayEl.classList.add('visible');
+  }
+
+  function hideEndgame() {
+    overlayEl.classList.remove('visible');
+  }
+
+  overlayReset.addEventListener('click', () => {
+    hideEndgame();
+    resetToDefault();
+  });
+
+  function loadScenario(name) {
+    if (isAnimating) return;
+    const s = SCENARIOS[name];
+    if (!s) return;
+    history      = [];
+    state        = { board: makeBoard(s.pits), turn: P1, phase: 'play', winner: null };
+    displayBoard = null;
+    logEl.innerHTML = '';
+    syncUndoBtn();
+    const h = document.getElementById('hint');
+    h.innerHTML = s.hint;
+    h.classList.add('scenario-active');
+    render();
+  }
+
+  function resetToDefault() {
+    if (isAnimating) return;
+    history      = [];
+    state        = initialState();
+    displayBoard = null;
+    logEl.innerHTML = '';
+    syncUndoBtn();
+    const h = document.getElementById('hint');
+    h.innerHTML = DEFAULT_HINT;
+    h.classList.remove('scenario-active');
+    render();
+  }
+
+  document.getElementById('reset').addEventListener('click', () => { hideEndgame(); resetToDefault(); });
+  for (const btn of document.querySelectorAll('.ex-btn')) {
+    btn.addEventListener('click', () => loadScenario(btn.dataset.scenario));
+  }
+  for (const btn of document.querySelectorAll('.mode-btn')) {
+    btn.addEventListener('click', () => {
+      if (isAnimating) return;
+      document.querySelector('.mode-btn.active').classList.remove('active');
+      btn.classList.add('active');
+      aiMode = btn.dataset.mode;
+      hideEndgame();
+      resetToDefault();
+    });
+  }
+
+  render();
+</script>
+
+</body>
+</html>
