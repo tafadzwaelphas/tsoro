@@ -7,6 +7,7 @@
 <style>
   :root {
     --bg: #2a1f17;
+    --bg-glow: #3a2a1f;
     --wood-light: #b8865a;
     --wood-rim: #3a2310;
     --cream: #f4e9d0;
@@ -17,12 +18,86 @@
     --p2: #3d8c8c;
     --capture: #d94e2f;
     --landing: #f0c75e;
+    --pit-stroke: #2a1808;
+    --btn-text: #2a1808;
+    --pit-grad-1: #1a0e05;
+    --pit-grad-2: #3a2410;
+    --pit-grad-3: #5c3a1a;
+    --board-grad-1: #a87246;
+    --board-grad-2: #8b5a2b;
+    --board-grad-3: #6e4523;
+  }
+  :root[data-theme="midnight"] {
+    --bg: #10141f;
+    --bg-glow: #1b2438;
+    --wood-light: #5b7aa8;
+    --wood-rim: #0c1119;
+    --cream: #e7edf7;
+    --muted: #7c8aa8;
+    --seed: #d8e2f2;
+    --seed-rim: #45557a;
+    --p1: #e0637a;
+    --p2: #4fb6c9;
+    --capture: #e2536b;
+    --landing: #f2c14e;
+    --pit-stroke: #060810;
+    --btn-text: #0c1119;
+    --pit-grad-1: #05060b;
+    --pit-grad-2: #131a2a;
+    --pit-grad-3: #202c47;
+    --board-grad-1: #33456b;
+    --board-grad-2: #263453;
+    --board-grad-3: #1a2338;
+  }
+  :root[data-theme="savanna"] {
+    --bg: #2c2410;
+    --bg-glow: #3d3417;
+    --wood-light: #c9a227;
+    --wood-rim: #3a2f12;
+    --cream: #f7edd2;
+    --muted: #b3a06a;
+    --seed: #f0e2b8;
+    --seed-rim: #8a6a2a;
+    --p1: #b5541f;
+    --p2: #4c7a3b;
+    --capture: #c9542a;
+    --landing: #e8c14a;
+    --pit-stroke: #241d0a;
+    --btn-text: #241d0a;
+    --pit-grad-1: #1c1607;
+    --pit-grad-2: #3a2f12;
+    --pit-grad-3: #5c4a1e;
+    --board-grad-1: #a9863a;
+    --board-grad-2: #8a6a2a;
+    --board-grad-3: #6e5320;
+  }
+  :root[data-theme="charcoal"] {
+    --bg: #0a0a0a;
+    --bg-glow: #161616;
+    --wood-light: #e6e6e6;
+    --wood-rim: #050505;
+    --cream: #f5f5f5;
+    --muted: #999999;
+    --seed: #ffffff;
+    --seed-rim: #444444;
+    --p1: #ff5a5a;
+    --p2: #4ad9ff;
+    --capture: #ff4d4d;
+    --landing: #ffd54a;
+    --pit-stroke: #000000;
+    --btn-text: #0a0a0a;
+    --pit-grad-1: #000000;
+    --pit-grad-2: #141414;
+    --pit-grad-3: #262626;
+    --board-grad-1: #333333;
+    --board-grad-2: #202020;
+    --board-grad-3: #121212;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     padding: 28px 16px 40px;
-    background: radial-gradient(ellipse at top, #3a2a1f 0%, var(--bg) 65%);
+    background: radial-gradient(ellipse at top, var(--bg-glow) 0%, var(--bg) 65%);
     color: var(--cream);
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     display: flex; flex-direction: column; align-items: center;
@@ -93,6 +168,45 @@
     border-color: var(--landing);
     color: var(--landing);
   }
+  .ex-btn.tutorial-btn {
+    background: var(--landing);
+    border-color: transparent;
+    color: var(--btn-text);
+    font-weight: 600;
+  }
+  .ex-btn.tutorial-btn:hover {
+    background: var(--cream);
+    color: var(--btn-text);
+  }
+
+  .tutorial-controls {
+    display: none;
+    align-items: center; justify-content: center;
+    gap: 12px;
+    margin: 0 0 16px;
+    font-size: 0.88rem;
+  }
+  .tutorial-controls.visible { display: flex; }
+  .tutorial-controls .tutorial-progress { color: var(--muted); }
+  .tutorial-controls button {
+    background: var(--wood-light);
+    color: var(--btn-text);
+    border: none;
+    padding: 7px 18px;
+    border-radius: 999px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .tutorial-controls button:hover:not(:disabled) { background: var(--cream); }
+  .tutorial-controls button:disabled { opacity: 0.4; cursor: default; }
+  .tutorial-controls #tutorial-exit {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid rgba(244,233,208,0.25);
+    font-weight: 400;
+  }
+  .tutorial-controls #tutorial-exit:hover { color: var(--cream); border-color: var(--landing); }
 
   svg#board {
     width: 100%;
@@ -116,7 +230,7 @@
   }
   .pit-base {
     fill: url(#pit-grad);
-    stroke: #2a1808;
+    stroke: var(--pit-stroke);
     stroke-width: 1.5;
   }
   .pit-base.legal {
@@ -127,6 +241,20 @@
   .pit-base.legal:hover {
     stroke: var(--cream);
     stroke-width: 4;
+  }
+  @keyframes pulse-relay {
+    0%, 100% { stroke: var(--landing); stroke-width: 3; filter: drop-shadow(0 0 0 rgba(240,199,94,0)); }
+    50%      { stroke: var(--landing); stroke-width: 6; filter: drop-shadow(0 0 9px rgba(240,199,94,0.85)); }
+  }
+  .pit-base.pulse-relay {
+    animation: pulse-relay 0.36s ease-in-out infinite;
+  }
+  @keyframes pulse-capture {
+    0%, 100% { stroke: var(--capture); stroke-width: 3.5; filter: drop-shadow(0 0 0 rgba(217,78,47,0)); }
+    50%      { stroke: var(--capture); stroke-width: 7; filter: drop-shadow(0 0 11px rgba(217,78,47,0.9)); }
+  }
+  .pit-base.pulse-capture {
+    animation: pulse-capture 0.4s ease-in-out infinite;
   }
   .seed {
     fill: var(--seed);
@@ -151,7 +279,7 @@
   .controls { margin-top: 18px; display: flex; gap: 10px; }
   .controls button {
     background: var(--wood-light);
-    color: #2a1808;
+    color: var(--btn-text);
     border: none;
     padding: 10px 22px;
     border-radius: 6px;
@@ -162,6 +290,11 @@
   }
   .controls button:hover:not(:disabled) { background: var(--cream); }
   .controls button:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+  .controls .mute-btn {
+    padding: 10px 16px;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
 
   h3.log-heading {
     color: var(--cream);
@@ -194,6 +327,36 @@
   #log .turn-end { color: var(--muted); font-style: italic; }
   #log .winner { color: var(--landing); font-weight: 700; font-size: 1.05em; margin-top: 6px; }
   #log .err { color: var(--capture); }
+
+  #move-history {
+    width: 100%;
+    max-width: 780px;
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(244,233,208,0.08);
+    border-radius: 8px;
+    max-height: 160px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+  }
+  #move-history .history-empty { padding: 10px 16px; color: var(--muted); font-style: italic; }
+  #move-history .history-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 16px;
+    border-bottom: 1px solid rgba(244,233,208,0.06);
+    cursor: pointer;
+  }
+  #move-history .history-row:last-child { border-bottom: none; }
+  #move-history .history-row:hover { background: rgba(240,199,94,0.1); }
+  #move-history .h-num { color: var(--muted); width: 1.6em; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  #move-history .h-player { font-weight: 600; flex-shrink: 0; }
+  #move-history .h-player.p1 { color: var(--p1); }
+  #move-history .h-player.p2 { color: var(--p2); }
+  #move-history .h-pit { color: var(--muted); flex-shrink: 0; }
+  #move-history .h-result { margin-left: auto; text-align: right; }
+  #move-history .h-result.plain { color: var(--muted); }
+  #move-history .h-result.relay { color: #7fc4d0; }
+  #move-history .h-result.capture { color: var(--capture); font-weight: 600; }
+  #move-history .h-result.win { color: var(--landing); font-weight: 700; }
 
   #endgame-overlay {
     display: none;
@@ -228,7 +391,7 @@
   }
   .endgame-card button {
     background: var(--wood-light);
-    color: #2a1808;
+    color: var(--btn-text);
     border: none;
     padding: 11px 28px;
     border-radius: 6px;
@@ -248,14 +411,14 @@
     max-width: 600px;
   }
 
-  .mode-select {
+  .mode-select, .theme-select {
     display: flex; gap: 6px; flex-wrap: wrap;
     align-items: center; justify-content: center;
     margin: 16px 0 0;
     font-size: 0.85rem;
   }
-  .mode-select .label { color: var(--muted); margin-right: 2px; }
-  .mode-btn {
+  .mode-select .label, .theme-select .label { color: var(--muted); margin-right: 2px; }
+  .mode-btn, .theme-btn {
     background: transparent;
     color: var(--cream);
     border: 1px solid rgba(244,233,208,0.25);
@@ -265,23 +428,27 @@
     font-size: 0.82rem;
     cursor: pointer;
   }
-  .mode-btn:hover { background: rgba(240,199,94,0.12); border-color: var(--landing); }
-  .mode-btn.active { background: rgba(240,199,94,0.18); border-color: var(--landing); color: var(--landing); }
+  .mode-btn:hover, .theme-btn:hover { background: rgba(240,199,94,0.12); border-color: var(--landing); }
+  .mode-btn.active, .theme-btn.active { background: rgba(240,199,94,0.18); border-color: var(--landing); color: var(--landing); }
 
   @media (max-width: 480px) {
     body { padding: 14px 10px 28px; }
     header h1 { font-size: 1.65rem; }
-    .mode-select { margin: 10px 0 0; gap: 5px; }
-    .mode-btn { padding: 4px 10px; font-size: 0.76rem; }
+    .mode-select, .theme-select { margin: 10px 0 0; gap: 5px; }
+    .mode-btn, .theme-btn { padding: 4px 10px; font-size: 0.76rem; }
     .subtitle { font-size: 0.8rem; }
     .turn-banner { margin: 12px 0 8px; padding: 8px 14px; font-size: 0.95rem; }
     .help-hint { font-size: 0.82rem; margin-bottom: 8px; }
     .examples { margin-bottom: 8px; gap: 6px; }
     .examples .label { display: none; }
     .ex-btn { padding: 5px 11px; font-size: 0.8rem; }
+    .tutorial-controls { margin-bottom: 8px; gap: 8px; font-size: 0.8rem; }
+    .tutorial-controls button { padding: 6px 14px; }
     .controls { margin-top: 12px; }
     h3.log-heading { font-size: 0.9rem; margin: 14px 0 4px; }
     #log { font-size: 0.78rem; max-height: 140px; padding: 10px 12px; }
+    #move-history { font-size: 0.78rem; max-height: 130px; }
+    #move-history .history-row { padding: 5px 12px; gap: 8px; }
     .endgame-card { padding: 28px 24px; margin: 0 16px; }
     .endgame-card .trophy { font-size: 2.4rem; }
     .endgame-card .winner-name { font-size: 1.35rem; }
@@ -298,10 +465,18 @@
 
 <div class="mode-select">
   <span class="label">Mode:</span>
-  <button class="mode-btn active" data-mode="2p">2-Player</button>
-  <button class="mode-btn" data-mode="easy">Easy AI</button>
+  <button class="mode-btn" data-mode="2p">2-Player</button>
+  <button class="mode-btn active" data-mode="easy">Easy AI</button>
   <button class="mode-btn" data-mode="medium">Medium AI</button>
   <button class="mode-btn" data-mode="hard">Hard AI</button>
+</div>
+
+<div class="theme-select">
+  <span class="label">Theme:</span>
+  <button class="theme-btn" data-theme="wood">Wood</button>
+  <button class="theme-btn" data-theme="midnight">Midnight</button>
+  <button class="theme-btn" data-theme="savanna">Savanna</button>
+  <button class="theme-btn" data-theme="charcoal">Charcoal</button>
 </div>
 
 <div class="turn-banner" id="turn"></div>
@@ -312,23 +487,30 @@
 </p>
 
 <div class="examples">
-  <span class="label">New here? Try a worked example:</span>
+  <button class="ex-btn tutorial-btn" id="start-tutorial">🎓 Guided tutorial</button>
+  <span class="label">or try a single move:</span>
   <button class="ex-btn" data-scenario="sowing">▶ Sowing</button>
   <button class="ex-btn" data-scenario="capture">▶ Capture</button>
   <button class="ex-btn" data-scenario="relay">▶ Relay</button>
 </div>
 
+<div class="tutorial-controls" id="tutorial-controls">
+  <span class="tutorial-progress" id="tutorial-progress"></span>
+  <button id="tutorial-next">Next →</button>
+  <button id="tutorial-exit">Exit tutorial</button>
+</div>
+
 <svg id="board" viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tsoro board">
   <defs>
     <radialGradient id="pit-grad" cx="50%" cy="42%" r="58%">
-      <stop offset="0%"  stop-color="#1a0e05"/>
-      <stop offset="60%" stop-color="#3a2410"/>
-      <stop offset="100%" stop-color="#5c3a1a"/>
+      <stop offset="0%"  stop-color="var(--pit-grad-1)"/>
+      <stop offset="60%" stop-color="var(--pit-grad-2)"/>
+      <stop offset="100%" stop-color="var(--pit-grad-3)"/>
     </radialGradient>
     <linearGradient id="wood-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#a87246"/>
-      <stop offset="50%"  stop-color="#8b5a2b"/>
-      <stop offset="100%" stop-color="#6e4523"/>
+      <stop offset="0%"   stop-color="var(--board-grad-1)"/>
+      <stop offset="50%"  stop-color="var(--board-grad-2)"/>
+      <stop offset="100%" stop-color="var(--board-grad-3)"/>
     </linearGradient>
     <pattern id="grain" patternUnits="userSpaceOnUse" width="4" height="160" patternTransform="rotate(3)">
       <rect width="4" height="160" fill="url(#wood-grad)"/>
@@ -343,6 +525,7 @@
 <div class="controls">
   <button id="reset">New game</button>
   <button id="undo" disabled>Undo</button>
+  <button id="mute" class="mute-btn" title="Toggle sound" aria-label="Mute sound"></button>
 </div>
 
 <div id="endgame-overlay">
@@ -354,11 +537,15 @@
   </div>
 </div>
 
+<h3 class="log-heading">Move history</h3>
+<div id="move-history"></div>
+
 <h3 class="log-heading">Move log</h3>
 <div id="log"></div>
 
 <footer>
   Gold-ringed pits are your legal moves. Click one — seeds arc through the air to each destination in turn.
+  <br><a href="history.html" style="color: var(--muted);">History &amp; rules of Tsoro →</a>
 </footer>
 
 <script type="module">
@@ -376,7 +563,7 @@
 
   const SCENARIOS = {
     sowing: {
-      pits: { 22: 2, 0: 2 },
+      pits: { 25: 2, 0: 2 },
       hint: `
         <strong>Sowing.</strong> The glowing pit holds 2 seeds. Click it —
         watch them arc out and drop one per pit along your two-row loop.
@@ -384,7 +571,7 @@
       `,
     },
     capture: {
-      pits: { 27: 2, 5: 2, 6: 2 },
+      pits: { 21: 2, 8: 2, 1: 1, 10: 2 },
       hint: `
         <strong>Capture.</strong> Click the glowing pit. Your 2 seeds arc out
         and the last lands in your inner row opposite the opponent's pile.
@@ -392,7 +579,7 @@
       `,
     },
     relay: {
-      pits: { 21: 3, 24: 1, 0: 2 },
+      pits: { 24: 3, 21: 1, 0: 2 },
       hint: `
         <strong>Relay.</strong> Click the glowing pit. Its 3 seeds sow into
         the next 3 pits — but the last lands on a non-empty outer pit.
@@ -400,6 +587,68 @@
       `,
     },
   };
+
+  // Guided tutorial: a fixed sequence of intro/move/outro steps. Each 'move' step
+  // loads its own curated board (same idea as SCENARIOS) rather than chaining one
+  // continuous game, so every step's outcome is guaranteed and easy to narrate.
+  const TUTORIAL_STEPS = [
+    {
+      kind: 'intro',
+      text: `
+        <strong>Welcome to Tsoro!</strong> You are Player 1 — you control the
+        bottom two rows of the board. Each turn, you pick up all the seeds
+        from one of your pits and sow them one by one into the pits that follow.
+        Let's walk through the three core moves.
+      `,
+    },
+    {
+      kind: 'move',
+      pits: { 25: 2, 0: 2 },
+      before: `
+        <strong>Sowing.</strong> The glowing pit holds 2 seeds. Click it —
+        watch them arc out and drop one per pit along your two-row loop.
+      `,
+      after: `
+        Your last seed landed on an <strong>empty outer pit</strong>, so your
+        turn simply ends there. That's the most common way a turn ends.
+      `,
+    },
+    {
+      kind: 'move',
+      pits: { 21: 2, 8: 2, 1: 1, 10: 2 },
+      before: `
+        <strong>Capturing.</strong> Click the glowing pit. This time your last
+        seed will land in your <em>inner</em> row, directly opposite a pile of
+        enemy seeds.
+      `,
+      after: `
+        <strong>Capture!</strong> Landing in your inner row opposite enemy
+        seeds sweeps up both of their pits. The captured seeds keep sowing,
+        continuing your turn — big swings are possible this way.
+      `,
+    },
+    {
+      kind: 'move',
+      pits: { 24: 3, 21: 1, 0: 2 },
+      before: `
+        <strong>Relaying.</strong> Click the glowing pit. Its last seed will
+        land on a pit in your own outer row that already has a seed in it.
+      `,
+      after: `
+        <strong>Relay!</strong> Landing on a non-empty pit in your own outer
+        row lets you pick up everything there and keep going — chaining
+        relays and captures together in one turn is the heart of Tsoro strategy.
+      `,
+    },
+    {
+      kind: 'outro',
+      text: `
+        <strong>That's it — you know the basics!</strong> Sow, relay, capture,
+        and try to empty your opponent's rows (or leave them with no legal
+        move) to win. Ready to play for real?
+      `,
+    },
+  ];
 
   function makeBoard(pits) {
     const b = new Array(TOTAL_PITS).fill(0);
@@ -415,21 +664,80 @@
 
   let state       = initialState();
   let isAnimating = false;
-  let history     = []; // stack of {state, logHTML} snapshots
-  let aiMode      = '2p'; // '2p' | 'easy' | 'medium' | 'hard'
+  let history     = []; // stack of {state, logHTML, historyHTML, moveCount} snapshots
+  let moveCount   = 0;  // total moves played since last reset/scenario load
+  let aiMode      = 'easy'; // '2p' | 'easy' | 'medium' | 'hard' — defaults to Easy AI, the most common first experience
+  let tutorialIndex        = null;  // index into TUTORIAL_STEPS, or null when not in tutorial
+  let tutorialAwaitingNext = false; // true once a 'move' step's animation finishes, until Next is clicked
+  let epoch = 0; // bumped by resetBoardState() so stale in-flight AI turns/animations can detect a reset and abandon themselves
 
   const PLAYER_NAMES = ['Player 1', 'Player 2'];
   function playerName(p) {
     return aiMode === '2p' ? PLAYER_NAMES[p] : (p === P1 ? 'You' : 'AI');
   }
   let displayBoard = null; // non-null while animating; render uses this instead of state.board
+  let pulsePits    = null; // { type: 'relay'|'capture', pits: [...] } — transient highlight during animateMove
 
   const root      = document.getElementById('board-content');
   const animLayer = document.getElementById('anim-layer');
   const turnEl    = document.getElementById('turn');
   const logEl     = document.getElementById('log');
+  const moveHistoryEl = document.getElementById('move-history');
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  // Synthesized sound cues (no audio assets) — distinct timbres for relay vs capture.
+  let audioCtx = null;
+  function getAudioCtx() {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function beep(ctx, { freq, start, duration, type = 'sine', gain = 0.18 }) {
+    const osc = ctx.createOscillator();
+    const g   = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    osc.connect(g); g.connect(ctx.destination);
+    const t0 = ctx.currentTime + start;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gain, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.02);
+  }
+
+  let muted = localStorage.getItem('tsoro-muted') === '1';
+
+  function playSound(kind) {
+    if (muted) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    if (kind === 'relay') {
+      // Quick rising two-note chime — "keep going"
+      beep(ctx, { freq: 520, start: 0,    duration: 0.12, type: 'triangle', gain: 0.16 });
+      beep(ctx, { freq: 700, start: 0.07, duration: 0.16, type: 'triangle', gain: 0.16 });
+    } else if (kind === 'capture') {
+      // Low thud + bright ring — "you took something"
+      beep(ctx, { freq: 150, start: 0,    duration: 0.22, type: 'sawtooth', gain: 0.22 });
+      beep(ctx, { freq: 880, start: 0.04, duration: 0.28, type: 'sine',     gain: 0.14 });
+    } else if (kind === 'tick') {
+      // Soft seed-landing click — varied pitch so repeats don't feel robotic
+      beep(ctx, { freq: 620 + Math.random() * 90, start: 0, duration: 0.055, type: 'sine', gain: 0.07 });
+    } else if (kind === 'turn-end') {
+      // Quiet close-out tone when a move ends without relay/capture
+      beep(ctx, { freq: 320, start: 0, duration: 0.16, type: 'triangle', gain: 0.1 });
+    } else if (kind === 'win') {
+      // Ascending flourish for the end-game overlay
+      [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) =>
+        beep(ctx, { freq, start: i * 0.11, duration: 0.18, type: 'triangle', gain: 0.15 }));
+    } else if (kind === 'click') {
+      beep(ctx, { freq: 1000, start: 0, duration: 0.03, type: 'square', gain: 0.05 });
+    }
+  }
 
   function pitCenter(pit) {
     return { x: COL_X[pit % COLS], y: ROW_Y[Math.floor(pit / COLS)] };
@@ -461,7 +769,7 @@
 
     // Board background
     root.appendChild(svgEl('rect', { x: 8, y: 8, width: 704, height: 324, rx: 22, ry: 22,
-      fill: 'url(#grain)', stroke: '#3a2310', 'stroke-width': 3 }));
+      fill: 'url(#grain)', stroke: 'var(--wood-rim)', 'stroke-width': 3 }));
     root.appendChild(svgEl('rect', { x: 22, y: 22, width: 676, height: 296, rx: 16, ry: 16,
       fill: 'none', stroke: 'rgba(0,0,0,0.28)', 'stroke-width': 2 }));
 
@@ -483,15 +791,18 @@
     }
 
     const board = displayBoard ?? state.board;
-    const legal = isAnimating ? new Set() : new Set(legalMoves(state));
+    const legal = (isAnimating || tutorialAwaitingNext) ? new Set() : new Set(legalMoves(state));
 
     for (let pit = 0; pit < ROWS * COLS; pit++) {
       const { x, y } = pitCenter(pit);
       const count    = board[pit];
       const isLegal  = legal.has(pit);
 
+      let pulseClass = '';
+      if (pulsePits && pulsePits.pits.includes(pit)) pulseClass = ` pulse-${pulsePits.type}`;
+
       const circle = svgEl('circle', { cx: x, cy: y, r: PIT_R,
-        class: 'pit-base' + (isLegal ? ' legal' : '') });
+        class: 'pit-base' + (isLegal ? ' legal' : '') + pulseClass });
       if (isLegal && !isAnimating) {
         circle.addEventListener('click', () => executeMove(pit, true));
       }
@@ -562,17 +873,22 @@
   // Fly all seeds in destPits simultaneously (staggered launches) from sourcePit.
   // If emptySource, source pit is visually cleared before seeds depart.
   // Captured seeds (emptySource=false) emerge from sourcePit without depleting it.
-  async function animateBatch(sourcePit, destPits, emptySource) {
+  // myEpoch guards against a reset (New game / scenario / tutorial step) happening
+  // mid-flight: once epoch has moved on, this batch stops touching shared state.
+  async function animateBatch(sourcePit, destPits, emptySource, myEpoch) {
     const STAGGER  = 70;   // ms between each seed's launch
     const DURATION = 560;  // ms per seed arc flight
 
+    if (epoch !== myEpoch) return;
     if (emptySource) displayBoard[sourcePit] = 0;
     render();
 
     await Promise.all(
       destPits.map((destPit, i) =>
         flySeed(sourcePit, destPit, i * STAGGER, DURATION).then(() => {
+          if (epoch !== myEpoch) return;
           displayBoard[destPit] += 1;
+          playSound('tick');
           render();
         })
       )
@@ -580,10 +896,12 @@
   }
 
   async function animateMove(beforeBoard, events) {
+    const myEpoch = epoch;
     isAnimating  = true;
     displayBoard = [...beforeBoard];
     render();
     await sleep(90); // brief pause so the user sees the board before seeds launch
+    if (epoch !== myEpoch) return;
 
     let sourcePit   = null;
     let sowBatch    = [];
@@ -591,13 +909,15 @@
 
     async function flushBatch() {
       if (sowBatch.length && sourcePit !== null) {
-        await animateBatch(sourcePit, sowBatch, emptySource);
+        await animateBatch(sourcePit, sowBatch, emptySource, myEpoch);
         sowBatch    = [];
         emptySource = true;
       }
     }
 
     for (const e of events) {
+      if (epoch !== myEpoch) return; // a reset happened mid-chain — abandon the rest
+
       if (e.type === 'pickup') {
         sourcePit = e.pit;
 
@@ -607,27 +927,41 @@
       } else if (e.type === 'relay') {
         // The relay-triggering sow is already in sowBatch — flush it first.
         await flushBatch();
+        if (epoch !== myEpoch) return;
+        pulsePits = { type: 'relay', pits: [e.pit] };
+        render();
+        playSound('relay');
         await sleep(180); // pause so the user sees the relay pit before it's picked up
+        if (epoch !== myEpoch) return;
+        pulsePits   = null;
         sourcePit   = e.pit;
         emptySource = true; // relay pit gets emptied
 
       } else if (e.type === 'capture') {
         // The capture-triggering sow is already in sowBatch — flush first.
         await flushBatch();
+        if (epoch !== myEpoch) return;
         // Clear captured pits and pause so the user sees what was taken.
         displayBoard[e.from[0]] = 0;
         displayBoard[e.from[1]] = 0;
+        pulsePits = { type: 'capture', pits: [e.at, ...e.from] };
         render();
+        playSound('capture');
         await sleep(280);
+        if (epoch !== myEpoch) return;
+        pulsePits   = null;
         sourcePit   = e.at;
         emptySource = false; // captured seeds emerge from landing pit without depleting it
 
       } else if (e.type === 'turn-end') {
         await flushBatch();
+        if (epoch !== myEpoch) return;
+        playSound('turn-end');
       }
     }
 
     await flushBatch(); // safety flush
+    if (epoch !== myEpoch) return;
     displayBoard = null;
     isAnimating  = false;
     render();
@@ -641,10 +975,11 @@
     return { cls: '', text: JSON.stringify(e) };
   }
 
-  function logMove(player, sourcePit, events) {
+  function logMove(player, sourcePit, events, moveIndex) {
     const header = document.createElement('div');
     header.className = `move-header p${player + 1}`;
-    header.textContent = `${playerName(player)} plays pit ${sourcePit}`;
+    header.id = `move-${moveIndex}`;
+    header.textContent = `${moveIndex}. ${playerName(player)} plays pit ${sourcePit}`;
     logEl.appendChild(header);
     for (const e of events) {
       if (e.type === 'sow') continue;
@@ -657,21 +992,70 @@
     logEl.scrollTop = logEl.scrollHeight;
   }
 
+  // Reduce a move's raw events to a short result badge for the history panel.
+  function summarizeMove(events) {
+    let relayCount = 0, captureTotal = 0;
+    for (const e of events) {
+      if (e.type === 'relay') relayCount++;
+      if (e.type === 'capture') captureTotal += e.seeds;
+    }
+    if (captureTotal) return { cls: 'capture', text: `Capture +${captureTotal}` };
+    if (relayCount)   return { cls: 'relay',   text: `Relay ×${relayCount}` };
+    return { cls: 'plain', text: 'Sow' };
+  }
+
+  function clearMoveHistory() {
+    moveHistoryEl.innerHTML = '<div class="history-empty">No moves yet — click a glowing pit to begin.</div>';
+  }
+
+  function logMoveHistory(moveIndex, player, sourcePit, events, ended) {
+    const placeholder = moveHistoryEl.querySelector('.history-empty');
+    if (placeholder) placeholder.remove();
+    const { cls, text } = summarizeMove(events);
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    row.dataset.target = `move-${moveIndex}`;
+    row.innerHTML = `
+      <span class="h-num">${moveIndex}.</span>
+      <span class="h-player p${player + 1}">${playerName(player)}</span>
+      <span class="h-pit">pit ${sourcePit}</span>
+      <span class="h-result ${ended ? 'win' : cls}">${text}${ended ? ' · Win' : ''}</span>
+    `;
+    moveHistoryEl.appendChild(row);
+    moveHistoryEl.scrollTop = moveHistoryEl.scrollHeight;
+  }
+
+  // Delegated so clicks keep working after undo/reset replace the panel's innerHTML wholesale.
+  moveHistoryEl.addEventListener('click', (ev) => {
+    const row = ev.target.closest('.history-row');
+    if (!row) return;
+    const target = document.getElementById(row.dataset.target);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
   const undoBtn = document.getElementById('undo');
   function syncUndoBtn() {
-    undoBtn.disabled = isAnimating || history.length === 0;
+    undoBtn.disabled = isAnimating || history.length === 0 || tutorialIndex !== null;
   }
 
   async function executeMove(pit, isHuman) {
     if (isAnimating) return;
+    const myEpoch = epoch;
     try {
-      if (isHuman) history.push({ state, logHTML: logEl.innerHTML });
+      if (isHuman) {
+        history.push({
+          state, logHTML: logEl.innerHTML,
+          historyHTML: moveHistoryEl.innerHTML, moveCount,
+        });
+      }
       syncUndoBtn();
       const player      = state.turn;
       const beforeBoard = [...state.board];
       const { state: next, events } = applyMove(state, pit);
       state = next;
-      logMove(player, pit, events);
+      moveCount++;
+      logMove(player, pit, events, moveCount);
+      logMoveHistory(moveCount, player, pit, events, state.phase === 'ended');
       if (state.phase === 'ended') {
         const w = document.createElement('div');
         w.className = 'winner';
@@ -680,8 +1064,14 @@
         logEl.scrollTop = logEl.scrollHeight;
       }
       await animateMove(beforeBoard, events);
+      if (epoch !== myEpoch) return; // a reset happened mid-animation — this move is stale, abandon it
       syncUndoBtn();
-      if (state.phase === 'ended') {
+      if (tutorialIndex !== null) {
+        tutorialAwaitingNext = true;
+        render(); // clear legal-pit highlighting now that we're waiting on "Next"
+        document.getElementById('hint').innerHTML = TUTORIAL_STEPS[tutorialIndex].after;
+        tutorialNextBtn.disabled = false;
+      } else if (state.phase === 'ended') {
         showEndgame(state.winner);
       } else if (aiMode !== '2p' && state.turn === P2) {
         await runAI();
@@ -695,11 +1085,13 @@
   }
 
   async function runAI() {
+    const myEpoch = epoch;
     isAnimating = true;
     syncUndoBtn();
     turnEl.className = 'turn-banner p2';
     turnEl.innerHTML = `<span class="chip"></span><em style="opacity:0.7">AI thinking…</em>`;
     await sleep(420);
+    if (epoch !== myEpoch) { isAnimating = false; return; } // reset (New game/scenario/tutorial) happened while "thinking" — abandon this turn
     const pit = getAIMove(state, aiMode);
     isAnimating = false;
     if (pit !== null) await executeMove(pit, false);
@@ -707,10 +1099,13 @@
 
   undoBtn.addEventListener('click', () => {
     if (isAnimating || history.length === 0) return;
+    playSound('click');
     hideEndgame();
     const snap = history.pop();
     state = snap.state;
     logEl.innerHTML = snap.logHTML;
+    moveHistoryEl.innerHTML = snap.historyHTML;
+    moveCount = snap.moveCount;
     displayBoard = null;
     syncUndoBtn();
     render();
@@ -721,6 +1116,7 @@
   const overlayReset   = document.getElementById('overlay-reset');
 
   function showEndgame(winner) {
+    playSound('win');
     overlayWinner.textContent = playerName(winner);
     overlayEl.classList.add('visible');
   }
@@ -730,19 +1126,34 @@
   }
 
   overlayReset.addEventListener('click', () => {
+    playSound('click');
     hideEndgame();
     resetToDefault();
   });
+
+  function resetBoardState() {
+    epoch++; // invalidate any in-flight AI turn/animation so it abandons itself instead of mutating the new state
+    history      = [];
+    moveCount    = 0;
+    displayBoard = null;
+    logEl.innerHTML = '';
+    clearMoveHistory();
+    syncUndoBtn();
+  }
+
+  function exitTutorialSilently() {
+    tutorialIndex        = null;
+    tutorialAwaitingNext = false;
+    tutorialControls.classList.remove('visible');
+  }
 
   function loadScenario(name) {
     if (isAnimating) return;
     const s = SCENARIOS[name];
     if (!s) return;
-    history      = [];
-    state        = { board: makeBoard(s.pits), turn: P1, phase: 'play', winner: null };
-    displayBoard = null;
-    logEl.innerHTML = '';
-    syncUndoBtn();
+    exitTutorialSilently();
+    resetBoardState();
+    state = { board: makeBoard(s.pits), turn: P1, phase: 'play', winner: null };
     const h = document.getElementById('hint');
     h.innerHTML = s.hint;
     h.classList.add('scenario-active');
@@ -751,24 +1162,89 @@
 
   function resetToDefault() {
     if (isAnimating) return;
-    history      = [];
-    state        = initialState();
-    displayBoard = null;
-    logEl.innerHTML = '';
-    syncUndoBtn();
+    exitTutorialSilently();
+    resetBoardState();
+    state = initialState();
     const h = document.getElementById('hint');
     h.innerHTML = DEFAULT_HINT;
     h.classList.remove('scenario-active');
     render();
   }
 
-  document.getElementById('reset').addEventListener('click', () => { hideEndgame(); resetToDefault(); });
+  const tutorialControls = document.getElementById('tutorial-controls');
+  const tutorialNextBtn  = document.getElementById('tutorial-next');
+  const tutorialExitBtn  = document.getElementById('tutorial-exit');
+  const tutorialProgress = document.getElementById('tutorial-progress');
+
+  function showTutorialStep() {
+    if (isAnimating) return;
+    const step = TUTORIAL_STEPS[tutorialIndex];
+    tutorialAwaitingNext = false;
+    tutorialControls.classList.add('visible');
+    tutorialProgress.textContent = `Step ${tutorialIndex + 1} of ${TUTORIAL_STEPS.length}`;
+
+    resetBoardState();
+    const h = document.getElementById('hint');
+    h.classList.add('scenario-active');
+
+    if (step.kind === 'move') {
+      state = { board: makeBoard(step.pits), turn: P1, phase: 'play', winner: null };
+      h.innerHTML = step.before;
+      tutorialNextBtn.textContent = 'Next →';
+      tutorialNextBtn.disabled = true; // enabled once the guided move finishes animating
+    } else {
+      state = initialState();
+      h.innerHTML = step.text;
+      tutorialNextBtn.textContent = step.kind === 'outro' ? 'Start playing' : 'Next →';
+      tutorialNextBtn.disabled = false;
+    }
+    render();
+  }
+
+  document.getElementById('start-tutorial').addEventListener('click', () => {
+    if (isAnimating) return;
+    playSound('click');
+    tutorialIndex = 0;
+    showTutorialStep();
+  });
+
+  tutorialNextBtn.addEventListener('click', () => {
+    if (isAnimating || tutorialNextBtn.disabled) return;
+    playSound('click');
+    if (TUTORIAL_STEPS[tutorialIndex].kind === 'outro') {
+      resetToDefault();
+      return;
+    }
+    tutorialIndex++;
+    showTutorialStep();
+  });
+
+  tutorialExitBtn.addEventListener('click', () => {
+    playSound('click');
+    resetToDefault();
+  });
+
+  const muteBtn = document.getElementById('mute');
+  function syncMuteBtn() {
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.setAttribute('aria-label', muted ? 'Unmute sound' : 'Mute sound');
+  }
+  muteBtn.addEventListener('click', () => {
+    muted = !muted;
+    localStorage.setItem('tsoro-muted', muted ? '1' : '0');
+    syncMuteBtn();
+    if (!muted) playSound('click');
+  });
+  syncMuteBtn();
+
+  document.getElementById('reset').addEventListener('click', () => { playSound('click'); hideEndgame(); resetToDefault(); });
   for (const btn of document.querySelectorAll('.ex-btn')) {
-    btn.addEventListener('click', () => loadScenario(btn.dataset.scenario));
+    btn.addEventListener('click', () => { playSound('click'); loadScenario(btn.dataset.scenario); });
   }
   for (const btn of document.querySelectorAll('.mode-btn')) {
     btn.addEventListener('click', () => {
       if (isAnimating) return;
+      playSound('click');
       document.querySelector('.mode-btn.active').classList.remove('active');
       btn.classList.add('active');
       aiMode = btn.dataset.mode;
@@ -777,6 +1253,24 @@
     });
   }
 
+  const VALID_THEMES = ['wood', 'midnight', 'savanna', 'charcoal'];
+  let theme = localStorage.getItem('tsoro-theme');
+  if (!VALID_THEMES.includes(theme)) theme = 'wood';
+  document.documentElement.setAttribute('data-theme', theme);
+  document.querySelector(`.theme-btn[data-theme="${theme}"]`).classList.add('active');
+
+  for (const btn of document.querySelectorAll('.theme-btn')) {
+    btn.addEventListener('click', () => {
+      playSound('click');
+      document.querySelector('.theme-btn.active').classList.remove('active');
+      btn.classList.add('active');
+      theme = btn.dataset.theme;
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('tsoro-theme', theme);
+    });
+  }
+
+  clearMoveHistory();
   render();
 </script>
 

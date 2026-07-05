@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tsoro — History &amp; Rules</title>
+<style>
+  :root {
+    --bg: #2a1f17;
+    --bg-glow: #3a2a1f;
+    --wood-light: #b8865a;
+    --wood-rim: #3a2310;
+    --cream: #f4e9d0;
+    --muted: #a89070;
+    --p1: #c8553d;
+    --p2: #3d8c8c;
+    --landing: #f0c75e;
+  }
+  :root[data-theme="midnight"] {
+    --bg: #10141f; --bg-glow: #1b2438; --wood-light: #5b7aa8; --wood-rim: #0c1119;
+    --cream: #e7edf7; --muted: #7c8aa8; --p1: #e0637a; --p2: #4fb6c9; --landing: #f2c14e;
+  }
+  :root[data-theme="savanna"] {
+    --bg: #2c2410; --bg-glow: #3d3417; --wood-light: #c9a227; --wood-rim: #3a2f12;
+    --cream: #f7edd2; --muted: #b3a06a; --p1: #b5541f; --p2: #4c7a3b; --landing: #e8c14a;
+  }
+  :root[data-theme="charcoal"] {
+    --bg: #0a0a0a; --bg-glow: #161616; --wood-light: #e6e6e6; --wood-rim: #050505;
+    --cream: #f5f5f5; --muted: #999999; --p1: #ff5a5a; --p2: #4ad9ff; --landing: #ffd54a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 28px 16px 48px;
+    background: radial-gradient(ellipse at top, var(--bg-glow) 0%, var(--bg) 65%);
+    color: var(--cream);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+  }
+  main { max-width: 680px; width: 100%; }
+  header { text-align: center; margin-bottom: 8px; }
+  h1 {
+    margin: 0;
+    font-family: "Georgia", "Iowan Old Style", serif;
+    font-size: 2.2rem;
+    letter-spacing: 0.04em;
+  }
+  .subtitle {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+  nav {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    margin: 20px 0 36px;
+  }
+  nav a {
+    color: var(--cream);
+    text-decoration: none;
+    border: 1px solid rgba(244,233,208,0.25);
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 0.88rem;
+  }
+  nav a:hover { background: rgba(240,199,94,0.12); border-color: var(--landing); color: var(--landing); }
+  nav a.primary { background: var(--wood-light); border-color: transparent; color: #2a1808; font-weight: 600; }
+  nav a.primary:hover { background: var(--cream); color: #2a1808; }
+
+  h2 {
+    font-family: "Georgia", serif;
+    font-weight: 500;
+    color: var(--landing);
+    font-size: 1.25rem;
+    margin: 40px 0 12px;
+    border-bottom: 1px solid rgba(244,233,208,0.15);
+    padding-bottom: 6px;
+  }
+  h2:first-of-type { margin-top: 0; }
+  p, li { line-height: 1.65; font-size: 0.98rem; }
+  p a { color: var(--landing); }
+  .muted { color: var(--muted); }
+  blockquote {
+    margin: 14px 0; padding: 10px 18px;
+    border-left: 3px solid var(--landing);
+    background: rgba(0,0,0,0.22);
+    font-style: italic;
+    color: var(--cream);
+  }
+  ul.rules { padding-left: 1.2em; }
+  ul.rules li { margin-bottom: 10px; }
+  ul.rules strong { color: var(--landing); }
+  .p1-name { color: var(--p1); font-weight: 600; }
+  .p2-name { color: var(--p2); font-weight: 600; }
+  table.sources { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.92rem; }
+  table.sources td { padding: 8px 4px; border-bottom: 1px solid rgba(244,233,208,0.1); vertical-align: top; }
+  table.sources td:first-child { color: var(--muted); white-space: nowrap; padding-right: 16px; }
+  table.sources a { color: var(--landing); }
+  footer {
+    margin-top: 44px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+  @media (max-width: 480px) {
+    body { padding: 18px 12px 32px; }
+    h1 { font-size: 1.7rem; }
+    h2 { font-size: 1.1rem; margin: 30px 0 10px; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <header>
+    <h1>Tsoro</h1>
+    <p class="subtitle">History, meaning &amp; rules of the Shona 4-row mancala</p>
+  </header>
+
+  <nav>
+    <a class="primary" href="play-svg.html">▶ Play</a>
+    <a href="index.html">Home</a>
+  </nav>
+
+  <h2>What does "Tsoro" mean?</h2>
+  <p>
+    <em>Tsoro</em> is a generic Shona word for board games, not the name of one
+    specific game. Different variants are traditionally distinguished by adding
+    a qualifier — for example <strong>Tsoro Yematatu</strong> ("tsoro of three")
+    names an entirely different game: a triangular, three-piece
+    alignment game with no captures, closer in spirit to Nine Men's Morris
+    than to mancala. This project is the <strong>4-row sowing variant</strong> —
+    the one usually just called <strong>Tsoro</strong> — where players sow and
+    capture seeds around two rows of pits.
+  </p>
+  <p class="muted">
+    (Earlier versions of this project mislabeled it "Tsoro Yematatu" —
+    that's been corrected.)
+  </p>
+
+  <h2>History &amp; cultural significance</h2>
+  <p>
+    Tsoro is an ancient strategy game with roots in Zimbabwe, said to have
+    been played for over a thousand years. It belongs to the same family of
+    African sowing games as Oware, Bao, and Omweso — collectively known as
+    <em>mancala</em>.
+  </p>
+  <blockquote>
+    "Tsoro was played by warriors to improve their enemy capturing and
+    raiding strategies in war situations" and "was also used to teach young
+    boys and girls how to count." "Kings and chiefs often settled disputes
+    by playing Tsoro."
+  </blockquote>
+  <p>
+    In its traditional form, the game didn't need a manufactured board at
+    all — rows of small holes were dug directly into the ground and
+    populated with pebbles or seeds. The 4-row, 7-holes-per-row layout used
+    here is the most common modern configuration.
+  </p>
+
+  <h2>How to play</h2>
+  <p>Each player owns the two rows nearest them — an outer (back) row and an inner (front) row — forming a closed loop of 14 pits they sow around.</p>
+  <ul class="rules">
+    <li><strong>Setup.</strong> Every pit starts with 2 seeds. <span class="p1-name">Player 1</span> takes the bottom two rows, <span class="p2-name">Player 2</span> the top two.</li>
+    <li><strong>Sow.</strong> Pick any of your own pits holding ≥2 seeds, empty it, and drop one seed into each following pit around your two-row loop.</li>
+    <li><strong>Relay.</strong> If your last seed lands in a non-empty pit on your <em>outer</em> row, pick up everything there and keep sowing.</li>
+    <li><strong>Capture.</strong> If your last seed lands in your <em>inner</em> row and the opponent's pits directly opposite (same column, their two rows) hold any seeds, capture all of them and continue sowing with the captured seeds.</li>
+    <li><strong>Turn ends</strong> when your last seed lands on an empty outer pit, or an inner pit with nothing to capture.</li>
+    <li><strong>Win.</strong> The game ends when a player has no seeds left, or no legal move — their opponent wins.</li>
+  </ul>
+  <p>
+    The <a href="play-svg.html">play page</a> has interactive worked examples
+    (Sowing / Capture / Relay) if you'd rather learn by watching a move play out.
+  </p>
+
+  <h2>Sources &amp; credits</h2>
+  <p>Rules and history were cross-referenced against the following sources:</p>
+  <table class="sources">
+    <tr>
+      <td>Wikipedia</td>
+      <td><a href="https://en.wikipedia.org/wiki/Tsoro" target="_blank" rel="noopener">Tsoro</a> — history, cultural context, board variants</td>
+    </tr>
+    <tr>
+      <td>Wikipedia</td>
+      <td><a href="https://en.wikipedia.org/wiki/Tsoro_yematatu" target="_blank" rel="noopener">Tsoro Yematatu</a> — confirms it's a distinct alignment game, not this one</td>
+    </tr>
+    <tr>
+      <td>Mancala World</td>
+      <td>Cross-referenced for rule details during initial development</td>
+    </tr>
+  </table>
+  <p class="muted">
+    Built as a small, free, open project in tribute to a centuries-old
+    Zimbabwean tradition. Corrections welcome if any detail here is inaccurate.
+  </p>
+</main>
+
+<footer>
+  <a href="index.html" style="color: var(--muted);">← Back to Tsoro</a>
+</footer>
+
+<script>
+  const VALID_THEMES = ['wood', 'midnight', 'savanna', 'charcoal'];
+  let theme = localStorage.getItem('tsoro-theme');
+  if (!VALID_THEMES.includes(theme)) theme = 'wood';
+  document.documentElement.setAttribute('data-theme', theme);
+</script>
+
+</body>
+</html>

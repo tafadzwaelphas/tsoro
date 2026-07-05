@@ -64,7 +64,7 @@
 
 ---
 
-## Phase 2 — Polish 👷
+## Phase 2 — Polish ✅
 
 | Task | Status |
 |------|--------|
@@ -72,10 +72,10 @@
 | Responsive layout (viewport meta + mobile media query) | ✅ |
 | Undo (history stack, human moves only) | ✅ |
 | End-game screen (overlay modal, "Play again") | ✅ |
-| Distinct visuals/sound for relay vs capture | 👷 |
-| Sound effects | 👷 |
-| Themes / colour palette | 👷 |
-| Move history panel | 👷 |
+| Distinct visuals/sound for relay vs capture | ✅ |
+| Sound effects | ✅ |
+| Themes / colour palette | ✅ |
+| Move history panel | ✅ |
 
 ---
 
@@ -104,10 +104,10 @@
 
 | Task | Status |
 |------|--------|
-| History & rules page (Shona origin + attribution) | 👷 |
-| Tutorial mode (guided first few turns) | 👷 |
-| Variant selector — add Tsoro Yematatu | 👷 |
-| Credits & cultural sources | 👷 |
+| History & rules page (Shona origin + attribution) | ✅ |
+| Tutorial mode (guided first few turns) | ✅ |
+| Variant selector — add Tsoro Yematatu (real alignment game) | 👷 |
+| Credits & cultural sources | ✅ |
 
 ---
 
