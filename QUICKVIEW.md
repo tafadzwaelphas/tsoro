@@ -58,7 +58,7 @@
 | Task | Status |
 |------|--------|
 | Local dev server (Python `http.server` port 8765) | ✅ |
-| Netlify deploy — frabjous-axolotl-99ed9c.netlify.app | ✅ |
+| GitHub Pages deploy — tafadzwaelphas.github.io/tsoro | ✅ |
 | Deployed URL recorded in TASKS.md | ✅ |
 | GitHub repo + auto-deploy | ✅ |
 
@@ -115,7 +115,7 @@
 
 | Task | Status |
 |------|--------|
-| Permanent static host → Netlify live ✅ | ✅ |
+| Permanent static host → GitHub Pages live ✅ | ✅ |
 | Custom domain (optional) | 👷 |
 | Mobile wrap via Capacitor / Tauri (optional) | 👷 |
 
