@@ -299,8 +299,9 @@
 
   .tutorial-callout {
     fill: var(--landing);
-    font-size: 20px;
+    font-size: 18px;
     text-anchor: middle;
+    dominant-baseline: central;
     pointer-events: none;
     transform-box: fill-box;
     transform-origin: center;
@@ -308,7 +309,7 @@
   }
   @keyframes tutorial-bounce {
     0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-6px); }
+    50%      { transform: translateY(-3px); }
   }
 
   svg#board {
@@ -947,12 +948,15 @@
       }
     }
 
-    // Tutorial callout — bouncing marker over the pit the learner should click
+    // Tutorial callout — bouncing marker resting on the pit the learner should click.
+    // Rows are only 75px apart with a 30px pit radius (a 15px gap), so the marker sits
+    // inside the target pit's own circle rather than floating between rows — otherwise
+    // it reads as ambiguous between the target and the pit directly above it.
     if (tutorialIndex !== null && !tutorialAwaitingNext) {
       const step = TUTORIAL_STEPS[tutorialIndex];
       if (step.kind === 'move') {
         const { x, y } = pitCenter(step.target);
-        const marker = svgEl('text', { x, y: y - PIT_R - 14, class: 'tutorial-callout' });
+        const marker = svgEl('text', { x, y: y - 14, class: 'tutorial-callout' });
         marker.textContent = '👆';
         root.appendChild(marker);
       }
