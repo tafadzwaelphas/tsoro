@@ -669,6 +669,7 @@
   let aiMode      = 'easy'; // '2p' | 'easy' | 'medium' | 'hard' — defaults to Easy AI, the most common first experience
   let tutorialIndex        = null;  // index into TUTORIAL_STEPS, or null when not in tutorial
   let tutorialAwaitingNext = false; // true once a 'move' step's animation finishes, until Next is clicked
+  let inScenario           = false; // true while a worked-example (Sowing/Capture/Relay) board is loaded — suppresses the AI response
   let epoch = 0; // bumped by resetBoardState() so stale in-flight AI turns/animations can detect a reset and abandon themselves
 
   const PLAYER_NAMES = ['Player 1', 'Player 2'];
@@ -1073,7 +1074,7 @@
         tutorialNextBtn.disabled = false;
       } else if (state.phase === 'ended') {
         showEndgame(state.winner);
-      } else if (aiMode !== '2p' && state.turn === P2) {
+      } else if (!inScenario && aiMode !== '2p' && state.turn === P2) {
         await runAI();
       }
     } catch (err) {
@@ -1153,6 +1154,7 @@
     if (!s) return;
     exitTutorialSilently();
     resetBoardState();
+    inScenario = true;
     state = { board: makeBoard(s.pits), turn: P1, phase: 'play', winner: null };
     const h = document.getElementById('hint');
     h.innerHTML = s.hint;
@@ -1164,6 +1166,7 @@
     if (isAnimating) return;
     exitTutorialSilently();
     resetBoardState();
+    inScenario = false;
     state = initialState();
     const h = document.getElementById('hint');
     h.innerHTML = DEFAULT_HINT;
@@ -1184,6 +1187,7 @@
     tutorialProgress.textContent = `Step ${tutorialIndex + 1} of ${TUTORIAL_STEPS.length}`;
 
     resetBoardState();
+    inScenario = false;
     const h = document.getElementById('hint');
     h.classList.add('scenario-active');
 
