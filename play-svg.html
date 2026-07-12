@@ -956,7 +956,7 @@
       const step = TUTORIAL_STEPS[tutorialIndex];
       if (step.kind === 'move') {
         const { x, y } = pitCenter(step.target);
-        const marker = svgEl('text', { x, y: y - 14, class: 'tutorial-callout' });
+        const marker = svgEl('text', { x, y: y + 16, class: 'tutorial-callout' });
         marker.textContent = '👆';
         root.appendChild(marker);
       }
