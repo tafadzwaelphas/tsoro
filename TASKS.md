@@ -33,7 +33,8 @@ Operational checklist. Strategic plan lives in [PLAN.md](./PLAN.md).
 - Node.js is now installed (`v24.16.0`, plus `npx playwright` for browser-driven verification) — earlier notes saying otherwise are stale.
 - Serve with `python3 -m http.server 8765`; play at `/play-svg.html`, tests at `/test.html`, barebones reference at `/play.html`, history/rules at `/history.html`.
 - Check `lsof -i :8765` before starting the server — a previous session's server may still be running.
-- Redeploy: `zip -j /tmp/tsoro-deploy.zip index.html play-svg.html play.html engine.js ai.js engine.test.js test.html game.html play-animated.html demo-anim.html history.html` then curl POST to Netlify API (site ID `31191621-2b5a-4d02-b9d2-bd411c974fa6`, token stored separately — it's ended up recorded in plaintext in `.claude/settings.local.json`'s permission-allowlist entries from past sessions; that file is gitignored).
+- **Live site (2026-07-12 onward): GitHub Pages — https://tafadzwaelphas.github.io/tsoro/** — auto-deploys from `main` on every push, no build step, no billing account. Just `git push`; GitHub rebuilds Pages within ~30-60s.
+- ~~Netlify deploy~~ — abandoned 2026-07-12: the free-tier account got blocked with "Account credit usage exceeded — new deploys are blocked until credits are added" despite 0/300 credits used and no clear cause; no card on file and switching hosts was simpler than debugging Netlify billing. Old manual redeploy recipe (zip + curl POST to Netlify API, site ID `31191621-2b5a-4d02-b9d2-bd411c974fa6`) is obsolete; token if still present in `.claude/settings.local.json` permission-allowlist entries can be ignored/removed.
 
 **Top of the queue:** The real Tsoro Yematatu as a separate variant (its own game engine — a bigger lift) — or Phase 4 online multiplayer (blocked on a backend/accounts decision, see below) — or Phase 3's optional MCTS.
 
@@ -111,9 +112,9 @@ Shipped in `play-svg.html`. Original `play.html` left untouched as a reference.
 - 👷 Variant selector — add the *real* Tsoro Yematatu (3-piece alignment game) as sibling — this is a new game engine, not a mancala variant; scope similar to a second mini-project
 - ✅ Credits & cultural sources — sourced and cited on `history.html` (Wikipedia's Tsoro and Tsoro Yematatu articles, verified via fetch; Mancala World per earlier research)
 
-## Phase 6 — Ship 👷
+## Phase 6 — Ship
 
-- 👷 Permanent static host (Netlify, Vercel, GitHub Pages)
+- ✅ Permanent static host — GitHub Pages (https://tafadzwaelphas.github.io/tsoro/), auto-deploys from `main` on push; switched from Netlify 2026-07-12 after its free tier blocked deploys on a credit-usage error
 - 👷 Custom domain (optional)
 - 👷 Mobile wrap via Capacitor / Tauri (optional)
 
