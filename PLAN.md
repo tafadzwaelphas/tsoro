@@ -31,11 +31,11 @@ This is a living document. We'll edit and refine it as the project evolves.
 
 **Relay (continue sowing).** If your last seed lands in a **non-empty hole on your outer row**, pick up everything in that hole and keep sowing.
 
-**Capture.** If your last seed lands in a hole on your **inner row** *and* the opponent's two holes in that same column contain seeds, capture all seeds from both of the opponent's holes in that column. Then continue sowing those captured seeds.
+**Capture.** If your last seed lands in a hole on your **inner row** *and* the opponent's **inner-row hole** in that same column is non-empty, capture all seeds from both of the opponent's holes in that column (inner + outer). Then continue sowing those captured seeds. If the opponent's inner-row hole is empty, no capture happens — even if their outer-row hole in that column has seeds.
 
 **Turn ends when** the last seed lands either:
 - in an **empty hole on your outer row**, or
-- in a hole on your **inner row** whose opposing column on the opponent's side is empty (no capture possible).
+- in a hole on your **inner row** whose opposing inner-row hole is empty (no capture possible, regardless of the opposing outer-row hole).
 
 **Win.** The game ends when one player has had all their seeds captured. The other player wins.
 

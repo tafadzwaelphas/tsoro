@@ -109,7 +109,7 @@ export function applyMove(state, sourcePit) {
     if (isInnerRow(lastPit, player)) {
       const [oppInner, oppOuter] = opposingColumn(lastPit, player);
       const captured = board[oppInner] + board[oppOuter];
-      if (captured > 0) {
+      if (board[oppInner] > 0) {
         board[oppInner] = 0;
         board[oppOuter] = 0;
         events.push({

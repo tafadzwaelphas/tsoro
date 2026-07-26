@@ -147,6 +147,18 @@ test('inner row but opposing column empty → no capture, turn ends', () => {
   assertEq(state.turn, P2);
 });
 
+test('inner row landing, opposing inner hole empty but opposing outer hole non-empty → no capture', () => {
+  // Clockwise: sow 2 from pit 22 → 21 (outer), 14 (inner col 0).
+  // Opposing col 0: P2 inner pit 7 empty, P2 outer pit 0 has seeds → front-row precondition fails, no capture.
+  const s = mkState({ 22: 2, 0: 4, 1: 2 }, P1);
+  const { state, events } = applyMove(s, 22);
+  assert(!events.some((e) => e.type === 'capture'), 'no capture — front hole is empty');
+  const last = events[events.length - 1];
+  assertEq(last.type, 'turn-end');
+  assertEq(last.reason, 'inner-no-capture');
+  assertEq(state.board[0], 4, 'opponent outer-row seeds must be left untouched');
+});
+
 test('capture chain: first capture leads to landing on another capture-eligible inner pit', () => {
   // Clockwise: sow 2 from pit 22 → 21 (outer), 14 (inner col 0).
   // Capture col 0: pits [7,0] = 1+1 = 2 seeds. Continue sowing 2 from cursor at 14.
