@@ -913,7 +913,8 @@
     }
 
     const board = displayBoard ?? state.board;
-    const legal = (isAnimating || tutorialAwaitingNext) ? new Set() : new Set(legalMoves(state));
+    const tutorialBlocksMoves = tutorialIndex !== null && TUTORIAL_STEPS[tutorialIndex].kind !== 'move';
+    const legal = (isAnimating || tutorialAwaitingNext || tutorialBlocksMoves) ? new Set() : new Set(legalMoves(state));
 
     for (let pit = 0; pit < ROWS * COLS; pit++) {
       const { x, y } = pitCenter(pit);
@@ -1202,7 +1203,7 @@
       await animateMove(beforeBoard, events);
       if (epoch !== myEpoch) return; // a reset happened mid-animation — this move is stale, abandon it
       syncUndoBtn();
-      if (tutorialIndex !== null) {
+      if (tutorialIndex !== null && TUTORIAL_STEPS[tutorialIndex].kind === 'move') {
         tutorialAwaitingNext = true;
         render(); // clear legal-pit highlighting + callout now that we're waiting on "Next"
         document.getElementById('tutorial-text').innerHTML = TUTORIAL_STEPS[tutorialIndex].after;
