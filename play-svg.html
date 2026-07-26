@@ -522,6 +522,20 @@
     font-size: 0.85rem;
   }
   .mode-select .label, .theme-select .label { color: var(--muted); margin-right: 2px; }
+  .theme-select.collapsed { display: none; }
+  .theme-toggle {
+    display: block;
+    margin: 8px auto 0;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid rgba(244,233,208,0.18);
+    padding: 3px 12px;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.74rem;
+    cursor: pointer;
+  }
+  .theme-toggle:hover { color: var(--cream); border-color: var(--landing); }
   .mode-btn, .theme-btn {
     background: transparent;
     color: var(--cream);
@@ -540,6 +554,7 @@
     header h1 { font-size: 1.65rem; }
     .mode-select, .theme-select { margin: 10px 0 0; gap: 5px; }
     .mode-btn, .theme-btn { padding: 4px 10px; font-size: 0.76rem; }
+    .theme-toggle { padding: 3px 10px; font-size: 0.7rem; }
     .subtitle { font-size: 0.8rem; }
     .turn-banner { margin: 12px 0 8px; padding: 8px 14px; font-size: 0.95rem; }
     .help-hint { font-size: 0.82rem; margin-bottom: 8px; }
@@ -575,7 +590,9 @@
   <button class="mode-btn" data-mode="hard">Hard AI</button>
 </div>
 
-<div class="theme-select">
+<button class="theme-toggle" id="theme-toggle" type="button" aria-expanded="false" aria-controls="theme-select">🎨 Theme</button>
+
+<div class="theme-select collapsed" id="theme-select">
   <span class="label">Theme:</span>
   <button class="theme-btn" data-theme="wood">Wood</button>
   <button class="theme-btn" data-theme="midnight">Midnight</button>
@@ -1436,6 +1453,13 @@
       localStorage.setItem('tsoro-theme', theme);
     });
   }
+
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  const themeSelectPanel = document.getElementById('theme-select');
+  themeToggleBtn.addEventListener('click', () => {
+    const nowCollapsed = themeSelectPanel.classList.toggle('collapsed');
+    themeToggleBtn.setAttribute('aria-expanded', String(!nowCollapsed));
+  });
 
   clearMoveHistory();
   render();
