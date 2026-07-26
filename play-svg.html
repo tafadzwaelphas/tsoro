@@ -617,7 +617,7 @@
 </div>
 
 <div class="turn-banner" id="turn"></div>
-<p class="help-hint" id="hint">
+<p class="help-hint hidden" id="hint">
   Click any <strong>glowing pit</strong> on your side to sow.
   Pick a pit with ≥2 seeds; seeds travel one-by-one around your two rows.
   Land your last seed in your inner row opposite enemy seeds to <strong>capture</strong>.
@@ -1309,13 +1309,21 @@
     syncUndoBtn();
   }
 
+  // The default idle hint is beginner-oriented clutter for anyone who already
+  // knows the rules, so it only shows while the Tutorial panel is expanded or
+  // an actual scenario/tutorial is in progress — not at rest by default.
+  function syncHintVisibility() {
+    const tutorialExpanded = !document.getElementById('examples').classList.contains('collapsed');
+    document.getElementById('hint').classList.toggle('hidden', !(inScenario || tutorialExpanded));
+  }
+
   function exitTutorialSilently() {
     tutorialIndex        = null;
     tutorialAwaitingNext = false;
     tutorialControls.classList.remove('visible');
     tutorialPanel.classList.remove('visible', 'outro');
     document.getElementById('tutorial-badge').classList.remove('show');
-    document.getElementById('hint').classList.remove('hidden');
+    syncHintVisibility();
   }
 
   function loadScenario(name) {
@@ -1329,6 +1337,7 @@
     const h = document.getElementById('hint');
     h.innerHTML = s.hint;
     h.classList.add('scenario-active');
+    syncHintVisibility();
     render();
   }
 
@@ -1341,6 +1350,7 @@
     const h = document.getElementById('hint');
     h.innerHTML = DEFAULT_HINT;
     h.classList.remove('scenario-active');
+    syncHintVisibility();
     render();
   }
 
@@ -1462,20 +1472,22 @@
     });
   }
 
-  function wirePanelToggle(toggleId, panelId) {
+  function wirePanelToggle(toggleId, panelId, onToggle) {
     const toggleBtn = document.getElementById(toggleId);
     const panel = document.getElementById(panelId);
     toggleBtn.addEventListener('click', () => {
       const nowCollapsed = panel.classList.toggle('collapsed');
       toggleBtn.setAttribute('aria-expanded', String(!nowCollapsed));
       toggleBtn.classList.toggle('active', !nowCollapsed);
+      if (onToggle) onToggle();
     });
   }
   wirePanelToggle('mode-toggle', 'mode-select');
   wirePanelToggle('theme-toggle', 'theme-select');
-  wirePanelToggle('tutorial-toggle', 'examples');
+  wirePanelToggle('tutorial-toggle', 'examples', syncHintVisibility);
 
   clearMoveHistory();
+  syncHintVisibility();
   render();
 </script>
 
